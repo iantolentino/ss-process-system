@@ -1,0 +1,11 @@
+.env
+*.db
+*.sqlite
+__pycache__/
+# internal legacy files + data: keep local only (repo is public)
+_legacy/
+files/uploads/*
+files/exports/*
+logs/*
+database/backups/*
+!**/.gitkeep
