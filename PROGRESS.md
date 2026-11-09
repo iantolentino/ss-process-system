@@ -12,7 +12,7 @@ Merge 3 legacy tools into ONE system for Strata Staff, deployed on cPanel:
 Rules from the owner: reuse the original users' flow/ideas first, improve, redesign later. Folders: `frontend/ backend/ database/ authentication/ files/ logs/` (+ more if needed). GSAP = mild animation only. Logs matter (policies change every months/year; every edit/upload/new version is dated).
 
 ## Current phase
-**Phase 5 (Process Library v1) done. Next: logging/audit viewer (Phase 6), then polish + deploy docs**
+**Phase 6 (audit viewer) done. Next: docs/DEPLOY.md, retention, polish, new-hire view**
 
 ## Decisions made
 - Flowcharts: form steps → auto-generated chart. Documents: uploaded files, versioned, all versions kept.
@@ -60,3 +60,5 @@ Departments found in v2: Accounting & Finance, Building & Facilities, Client Suc
 - 2026-11-09 — Built admin Users page (`backend/services/users.php`, `/users`) and Policy Portal v1 (`backend/services/documents.php`; `/policies`, `/document`, `/download`). Shared layout `components/app_open|app_close.php`, helpers `h()`, `flash()`, `UserError` in bootstrap. Files stored in `files/uploads/<docId>/<random>.<ext>`, never overwritten. `tests/portal_smoke.sh` 15/15 pass; `tests/auth_smoke.sh` 9/9. Not done in Portal: memo fields (from/audience/expiry), version text-compare, DOCX->HTML preview (mammoth), no-copy viewer, import of the ~25 legacy policies. Set php.ini upload_max_filesize/post_max_size >= 20M on cPanel (MultiPHP INI Editor).
 - 2026-11-09 — Built Process Library: `backend/services/processes.php`, pages `process-library` (departments, search, positions), `process` (flowchart, step table, people involved, version history, change requests, mark reviewed, print), `process-edit` (form + JS step editor `frontend/js/process-edit.js`). Steps live in `process_versions.snapshot` JSON. Imported 46 legacy processes (279 steps) from local-only `database/seeds/legacy_processes.json` (git-ignored; re-runnable importer committed). Legacy steps have NO person/position — each department's process_owner must fill these in (handoff quality depends on it). `tests/process_smoke.sh` 22/22; all 3 suites green. Local DB contains smoke-test users/rows.
   Next: Phase 6 audit viewer page (admin: filter by user/date/entity, CSV), log retention, then DEPLOY.md, templates for new departments, memo fields, glossary/new-hire "Start here".
+- 2026-11-09 — Built `/audit` (admin only; nav link "Audit log"): filters, 50/page, "field: old → new" summary + full before/after JSON, CSV export (max 50k rows, audited, spreadsheet-formula-safe). `tests/audit_smoke.sh` 10/10; all 4 suites green (auth 9, portal 15, process 22, audit 10).
+  Remaining logging TODO: debug switch docs, log-file retention/cleanup cron, per-process activity timeline link, "who viewed/downloaded" (downloads only in logs/app-*.log, not audit_log).

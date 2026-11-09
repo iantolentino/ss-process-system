@@ -84,6 +84,7 @@ details.panel[open] > summary { margin-bottom: 1rem; }
 .step-head { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
 .step-head .form-input { flex: 1; }
 .step-head .btn { padding: 8px 12px; }
+pre.json { font-size: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px; max-height: 260px; overflow: auto; white-space: pre-wrap; word-break: break-word; }
 ul.plain { list-style: none; display: grid; gap: 6px; }
 @media print { .topbar, .noprint, .toolbar, .tabs { display: none !important; } body { background: #fff; } .panel, .flow-node { break-inside: avoid; } }
 

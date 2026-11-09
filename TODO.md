@@ -98,11 +98,11 @@ process/
 - [x] Migrated 46 legacy processes (279 steps) as v1 via database/import_legacy_processes.php
 
 ## Phase 6 — Logging & audit (priority)
-- [ ] Central logger in backend (levels, request id)
-- [ ] `audit_log` writes on every create/edit/upload/version/archive/login/role change
-- [ ] Admin Audit page: filter by user/date/entity, export CSV
+- [x] Central logger: log_line() daily files app/audit/error
+- [x] audit_log writes on login/logout/reset, users, documents, processes, positions, change requests, exports
+- [x] Admin Audit page: filter by user/record type/action/record #/date, paging, field-level changes, CSV export (export itself audited, formula-safe)
 - [ ] File logs: `logs/app.log`, `error.log`, `access.log`; daily rotation; never log passwords/tokens
-- [ ] Timeline widget on each document/process ("Mar 3 2027 – v3 uploaded by J. Cruz")
+- [x] Timeline on each document (Activity); processes show version history
 - [ ] Debug mode switch via `.env` (off in production)
 
 ## Phase 7 — Frontend polish
