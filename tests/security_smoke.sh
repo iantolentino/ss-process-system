@@ -4,7 +4,7 @@
 B=${1:?base url}; ADMIN=${2:?admin email}; APW=${3:?admin password}
 S=$RANDOM; PW='SmokePass123'; T=$(mktemp -d); fail=0
 M="/c/xampp/mysql/bin/mysql.exe -uroot ss_process -N -e"
-LOG="$(dirname "$0")/../logs/app-$(date +%F).log"
+LOG="$(dirname "$0")/../logs/app-$(/c/xampp/php/php.exe -r "echo date(\"Y-m-d\");").log"
 check(){ [ "$2" = "$3" ] && echo "ok   $1" || { echo "FAIL $1 (got '$2', want '$3')"; fail=1; }; }
 tok(){ curl -s -c "$1" -b "$1" "$B/$2" | grep -o 'name="csrf" value="[a-f0-9]*"' | head -1 | sed 's/.*value="//;s/"//'; }
 login(){ curl -s -c "$1" -b "$1" -o /dev/null -d "csrf=$(tok "$1" login)&email=$2&password=$3" "$B/login"; }

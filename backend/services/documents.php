@@ -127,3 +127,20 @@ function update_document(array $user, int $id, array $in): void {
         ->execute([...array_values($after), $id]);
     audit((int) $user['id'], $before['status'] !== $status ? "status_$status" : 'update', 'document', $id, $before, $after);
 }
+
+// Line diff of two small text files (LCS). Returns [['=', line], ['-', line], ['+', line], ...]; null when too big to compare.
+function diff_lines(array $a, array $b): ?array {
+    if (count($a) > 1500 || count($b) > 1500) return null;
+    $n = count($a); $m = count($b); $L = array_fill(0, $n + 1, array_fill(0, $m + 1, 0));
+    for ($i = $n - 1; $i >= 0; $i--) for ($j = $m - 1; $j >= 0; $j--)
+        $L[$i][$j] = $a[$i] === $b[$j] ? $L[$i + 1][$j + 1] + 1 : max($L[$i + 1][$j], $L[$i][$j + 1]);
+    $out = []; $i = $j = 0;
+    while ($i < $n && $j < $m) {
+        if ($a[$i] === $b[$j]) { $out[] = ['=', $a[$i]]; $i++; $j++; }
+        elseif ($L[$i + 1][$j] >= $L[$i][$j + 1]) $out[] = ['-', $a[$i++]];
+        else $out[] = ['+', $b[$j++]];
+    }
+    while ($i < $n) $out[] = ['-', $a[$i++]];
+    while ($j < $m) $out[] = ['+', $b[$j++]];
+    return $out;
+}

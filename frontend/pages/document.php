@@ -31,6 +31,21 @@ $vs->execute([$id]);
 $versions = $vs->fetchAll();
 $next = count($versions) + 1 . '.0';
 
+// ?compare=<version id>: that version against the one uploaded just before it.
+$cmp = null;
+if (isset($_GET['compare'])) {
+    foreach ($versions as $k => $v) if ($v['id'] == (int) $_GET['compare'] && isset($versions[$k + 1])) $cmp = ['new' => $v, 'old' => $versions[$k + 1]];
+    if ($cmp) {
+        $lines = function (array $v) {
+            $p = ROOT . '/' . $v['file_path'];
+            return in_array(strtolower(pathinfo($p, PATHINFO_EXTENSION)), ['txt', 'csv'], true) && is_file($p) && filesize($p) < 200000
+                ? preg_split('/\R/', rtrim((string) file_get_contents($p))) : null;
+        };
+        [$o, $n] = [$lines($cmp['old']), $lines($cmp['new'])];
+        $cmp['diff'] = $o !== null && $n !== null ? diff_lines($o, $n) : null;
+    }
+}
+
 $tl = db()->prepare('SELECT a.at, a.action, CONCAT(u.first_name, " ", u.last_name) AS who FROM audit_log a LEFT JOIN users u ON u.id = a.user_id
                      WHERE a.entity = "document" AND a.entity_id = ? ORDER BY a.id DESC');
 $tl->execute([$id]);
@@ -58,12 +73,28 @@ require __DIR__ . '/../components/app_open.php';
     <tr>
       <td><?= h($v['version_no']) ?> <?= $v['id'] == $doc['current_version_id'] ? '<span class="badge">current</span>' : '' ?></td>
       <td><?= h($v['effective_date']) ?></td><td><?= h($v['uploaded_at']) ?></td><td><?= h($v['uploader']) ?></td>
-      <td><?= h($v['changelog']) ?></td>
+      <td><?= h($v['changelog']) ?><?php if ($v !== end($versions)): ?> · <a href="<?= base_url('document?id=' . $id . '&compare=' . $v['id']) ?>#compare">Compare with previous</a><?php endif ?></td>
       <td><a href="<?= base_url('download?v=' . $v['id']) ?>"><?= h($v['original_name']) ?></a></td>
     </tr>
     <?php endforeach ?>
   </table></div>
 </div>
+
+<?php if ($cmp): ?>
+<div class="panel" id="compare" data-animate>
+  <h2>Version <?= h($cmp['old']['version_no']) ?> → <?= h($cmp['new']['version_no']) ?></h2>
+  <p class="muted">Effective <?= h($cmp['old']['effective_date']) ?> → <?= h($cmp['new']['effective_date']) ?> · uploaded by <?= h($cmp['new']['uploader']) ?> on <?= h($cmp['new']['uploaded_at']) ?>
+    · size <?= (int) $cmp['old']['size_bytes'] ?> → <?= (int) $cmp['new']['size_bytes'] ?> bytes<br>
+    Reason given: <?= h($cmp['new']['changelog']) ?></p>
+  <?php if ($cmp['diff'] === null): ?>
+    <p class="muted">A line-by-line comparison is only available for .txt and .csv files. Download both versions to compare other file types.</p>
+  <?php elseif (!array_filter($cmp['diff'], fn($d) => $d[0] !== '=')): ?>
+    <p class="muted">The text of both files is identical.</p>
+  <?php else: ?>
+    <pre class="diff"><?php foreach ($cmp['diff'] as [$k, $line]): ?><span class="d<?= $k === '=' ? 'eq' : ($k === '+' ? 'add' : 'del') ?>"><?= $k === '=' ? '  ' : $k . ' ' ?><?= h($line) ?></span><?php endforeach ?></pre>
+  <?php endif ?>
+</div>
+<?php endif ?>
 
 <?php if ($canEdit): ?>
 <details class="panel" <?= $error && ($_POST['action'] ?? '') === 'version' ? 'open' : '' ?>>

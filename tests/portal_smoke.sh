@@ -35,6 +35,9 @@ PAGE=$(curl -s -b "$T/emp" "$B/document?id=$DOC")
 check "employee sees both versions" "$(echo "$PAGE" | grep -c 'Updated scope\|Initial version')" 2
 check "employee sees no edit forms" "$(echo "$PAGE" | grep -c 'Upload a new version')" 0
 V=$(echo "$PAGE" | grep -o 'download?v=[0-9]*' | head -1 | cut -d= -f2)
+CMP=$(curl -s -b "$T/emp" "$B/document?id=$DOC&compare=$V")
+check "compare shows removed+added lines" "$(echo "$CMP" | grep -o "dadd\">+ v2 text\|ddel\">- v1 text" | wc -l | tr -d " ")" 2
+check "no compare for oldest version" "$(curl -s -b "$T/emp" "$B/document?id=$DOC&compare=0" | grep -c "id=.compare.")" 0
 check "download works" "$(curl -s -b "$T/emp" "$B/download?v=$V")" "v2 text"
 check "uploads folder not web-readable" "$(curl -s -o /dev/null -w '%{http_code}' "$B/files/uploads/$DOC/x.txt")" 403
 check "employee cannot edit" "$(curl -s -c "$T/emp" -b "$T/emp" -o /dev/null -w '%{http_code}' -d "csrf=$(tok "$T/emp" "document?id=$DOC")&id=$DOC&title=Hacked&status=active" "$B/document")" 403

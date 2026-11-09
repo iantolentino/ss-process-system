@@ -76,11 +76,11 @@ process/
 - [x] Upload new document / new version (version no., effective date, change summary required)
 - [x] Edit metadata (logged with before/after)
 - [x] Archive instead of delete (restore = set active)
-- [ ] Compare versions (changelog; text diff for DOCX→HTML if feasible)
+- [x] Compare versions (dates, size, change note; line diff for .txt/.csv; other types: download both)
 - [x] Review-due dates + dashboard "Reviews due" panel
 - [ ] Acknowledgement tracking (if Q7 yes)
 - [x] Memos: from, audience, expiry (migration 002; expired badge)
-- [ ] Forms: downloadable + category
+- [x] Forms: downloadable + category (same as other types)
 - [ ] Optional protected/no-copy viewer (legacy `no-copy.html`)
 - [x] SharePoint link field
 
@@ -103,7 +103,7 @@ process/
 - [x] Admin Audit page: filter by user/record type/action/record #/date, paging, field-level changes, CSV export (export itself audited, formula-safe)
 - [ ] File logs: `logs/app.log`, `error.log`, `access.log`; daily rotation; never log passwords/tokens
 - [x] Timeline on each document (Activity); processes show version history
-- [ ] Debug mode switch via `.env` (off in production)
+- [x] Debug mode switch via `.env` APP_DEBUG (documented in DEPLOY.md)
 
 ## Phase 7 — Frontend polish
 - [ ] Split legacy inline CSS/JS into shared files, design tokens (colours/fonts) for later redesign
@@ -125,7 +125,7 @@ process/
 - [x] Rollback + restore steps documented (restore drill on the real host still TODO)
 
 ## Phase 10 — Handover
-- [ ] Admin guide, editor guide, **new-hire guide**
+- [x] Admin guide, editor guide, new-hire guide (docs/GUIDE.md)
 - [ ] Seed realistic sample data
 - [ ] Push to GitHub `iantolentino/ss-process-system` (code only — no db, no uploads, no `.env`)
 
