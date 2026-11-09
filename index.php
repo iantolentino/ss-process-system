@@ -2,7 +2,7 @@
 // Front controller: /login, /logout, /forgot, /reset, /dashboard. Add new pages to $pages.
 require __DIR__ . '/authentication/auth.php';
 
-$pages = ['login', 'logout', 'forgot', 'reset', 'dashboard'];
+$pages = ['login', 'logout', 'forgot', 'reset', 'dashboard', 'users', 'policies', 'document', 'download'];
 $path = trim(substr(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), strlen(rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'))), '/');
 $page = $path === '' || $path === 'index.php' ? 'dashboard' : $path;
 

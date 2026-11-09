@@ -1,0 +1,87 @@
+<?php
+require_once __DIR__ . '/../../backend/services/documents.php';
+$user = require_login();
+$canEdit = can_edit_docs($user);
+$type = isset(DOC_TYPES[$_GET['type'] ?? '']) ? $_GET['type'] : 'policy';
+
+$error = null;
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!$canEdit) { http_response_code(403); exit('You do not have access to this action.'); }
+    try {
+        $id = create_document($user, $_POST, $_FILES['file'] ?? []);
+        flash('Document created.');
+        redirect("document?id=$id");
+    } catch (UserError $e) {
+        $error = $e->getMessage();
+        $type = isset(DOC_TYPES[$_POST['type'] ?? '']) ? $_POST['type'] : $type;
+    }
+}
+
+$q = trim($_GET['q'] ?? '');
+$cat = trim($_GET['category'] ?? '');
+$statuses = $canEdit ? (isset($_GET['archived']) ? "'active','draft','archived'" : "'active','draft'") : "'active'";
+$sql = "SELECT d.id, d.title, d.category, d.status, d.review_due, v.version_no, v.effective_date, v.uploaded_at
+        FROM documents d LEFT JOIN document_versions v ON v.id = d.current_version_id
+        WHERE d.type = ? AND d.status IN ($statuses)";
+$args = [$type];
+if ($q !== '') { $sql .= ' AND (d.title LIKE ? OR d.category LIKE ?)'; array_push($args, "%$q%", "%$q%"); }
+if ($cat !== '') { $sql .= ' AND d.category = ?'; $args[] = $cat; }
+$st = db()->prepare($sql . ' ORDER BY d.title');
+$st->execute($args);
+$docs = $st->fetchAll();
+$cats = db()->query("SELECT DISTINCT category FROM documents WHERE category <> '' ORDER BY category")->fetchAll(PDO::FETCH_COLUMN);
+
+$title = 'Policy Portal';
+require __DIR__ . '/../components/app_open.php';
+$qs = fn(string $t) => base_url('policies?type=' . $t);
+?>
+<h1 class="title" data-animate>Policy Portal</h1>
+<p class="muted">Policies, memos, manuals and forms. Every version is kept.</p>
+<nav class="tabs"><?php foreach (DOC_TYPES as $k => $label): ?>
+  <a href="<?= $qs($k) ?>" class="<?= $k === $type ? 'active' : '' ?>"><?= h($label) ?></a><?php endforeach ?></nav>
+
+<form class="toolbar" method="get">
+  <input type="hidden" name="type" value="<?= h($type) ?>">
+  <input class="form-input" name="q" placeholder="Search title or category" value="<?= h($q) ?>">
+  <select class="form-input" name="category"><option value="">All categories</option>
+    <?php foreach ($cats as $c): ?><option <?= $c === $cat ? 'selected' : '' ?>><?= h($c) ?></option><?php endforeach ?></select>
+  <?php if ($canEdit): ?><label class="muted" style="align-self:center"><input type="checkbox" name="archived" value="1" <?= isset($_GET['archived']) ? 'checked' : '' ?>> show archived</label><?php endif ?>
+  <button class="btn inline" type="submit">Search</button>
+</form>
+
+<?php if ($error): ?><div class="alert error"><?= h($error) ?></div><?php endif ?>
+<?php if ($canEdit): ?>
+<details class="panel" <?= $error ? 'open' : '' ?>>
+  <summary>+ Add a document</summary>
+  <form method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
+    <div class="grid2">
+      <div class="form-group"><label class="form-label">Type</label>
+        <select class="form-input" name="type"><?php foreach (DOC_TYPES as $k => $label): ?><option value="<?= $k ?>" <?= $k === $type ? 'selected' : '' ?>><?= h(rtrim($label, 's')) ?></option><?php endforeach ?></select></div>
+      <div class="form-group"><label class="form-label">Title</label><input class="form-input" name="title" required value="<?= h($_POST['title'] ?? '') ?>"></div>
+      <div class="form-group"><label class="form-label">Category</label><input class="form-input" name="category" list="cats" value="<?= h($_POST['category'] ?? '') ?>">
+        <datalist id="cats"><?php foreach ($cats as $c): ?><option value="<?= h($c) ?>"><?php endforeach ?></datalist></div>
+      <div class="form-group"><label class="form-label">Version</label><input class="form-input" name="version_no" required value="<?= h($_POST['version_no'] ?? '1.0') ?>"></div>
+      <div class="form-group"><label class="form-label">Effective date</label><input class="form-input" type="date" name="effective_date" required value="<?= h($_POST['effective_date'] ?? date('Y-m-d')) ?>"></div>
+      <div class="form-group"><label class="form-label">Next review date (optional)</label><input class="form-input" type="date" name="review_due" value="<?= h($_POST['review_due'] ?? '') ?>"></div>
+      <div class="form-group"><label class="form-label">SharePoint link (optional)</label><input class="form-input" name="sharepoint_url" value="<?= h($_POST['sharepoint_url'] ?? '') ?>"></div>
+      <div class="form-group"><label class="form-label">File (<?= h(implode(', ', DOC_EXT)) ?>; max 20 MB)</label><input class="form-input" type="file" name="file" required></div>
+    </div>
+    <div class="form-group"><label class="form-label">What is this version? (optional for the first one)</label><input class="form-input" name="changelog" value="<?= h($_POST['changelog'] ?? '') ?>" placeholder="Initial version"></div>
+    <button class="btn inline" type="submit">Upload</button>
+  </form>
+</details>
+<?php endif ?>
+
+<div class="table-wrap"><table class="tbl" data-animate>
+  <tr><th>Title</th><th>Category</th><th>Version</th><th>Effective</th><th>Review due</th></tr>
+  <?php foreach ($docs as $d): $over = $d['review_due'] && $d['review_due'] < date('Y-m-d'); ?>
+  <tr>
+    <td><a href="<?= base_url('document?id=' . $d['id']) ?>"><?= h($d['title']) ?></a>
+      <?php if ($d['status'] !== 'active'): ?> <span class="badge off"><?= h($d['status']) ?></span><?php endif ?></td>
+    <td><?= h($d['category'] ?: '—') ?></td><td><?= h($d['version_no'] ?? '—') ?></td><td><?= h($d['effective_date'] ?? '—') ?></td>
+    <td><?= $d['review_due'] ? '<span class="badge ' . ($over ? 'warn' : '') . '">' . h($d['review_due']) . '</span>' : '—' ?></td>
+  </tr>
+  <?php endforeach; if (!$docs): ?><tr><td colspan="5" class="muted">No <?= h(strtolower(DOC_TYPES[$type])) ?> found.</td></tr><?php endif ?>
+</table></div>
+<?php require __DIR__ . '/../components/app_close.php';

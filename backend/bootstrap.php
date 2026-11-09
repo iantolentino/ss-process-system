@@ -35,6 +35,21 @@ function audit(?int $userId, string $action, string $entity, ?int $entityId, $be
     log_line('audit', 'INFO', "$action $entity#$entityId", ['user' => $userId]);
 }
 
+function h($s): string {
+    return htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
+}
+
+// Thrown for mistakes the user can fix; pages show the message instead of a 500.
+class UserError extends Exception {}
+
+function flash(?string $msg = null): ?string {
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+    if ($msg !== null) { $_SESSION['flash'] = $msg; return null; }
+    $m = $_SESSION['flash'] ?? null;
+    unset($_SESSION['flash']);
+    return $m;
+}
+
 set_exception_handler(function (Throwable $e) {
     log_line('error', 'ERROR', $e->getMessage(), ['at' => $e->getFile() . ':' . $e->getLine()]);
     http_response_code(500);

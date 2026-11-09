@@ -66,23 +66,23 @@ process/
 - [x] Password hashing + lockout (5 fails / 15 min)
 - [x] Forgot/reset password (1h token, single use; local dev logs the link, production uses mail())
 - [x] Role helpers: require_login(), require_role() (apply per route as pages are built)
-- [ ] Admin: user management (add/edit/disable, not hard-delete)
+- [x] Admin: user management (add/edit/disable; last-admin + self-demotion guards)
 - [x] Log: login, logout, reset (audit_log + logs/)
 
 ## Phase 4 — Policy Portal (own page)
-- [ ] Landing with 4 tabs: **Policies · Memos · Manuals · Forms**
-- [ ] Browse: search, category filter, status (active/superseded/draft), sort by updated
-- [ ] Document detail: current version, metadata, **version history table** (version, date, who, what changed), download any version
-- [ ] Upload new document / **upload new version** (required: version no., effective date, change summary)
-- [ ] Edit metadata (logged with before/after)
-- [ ] Archive instead of delete (soft delete, restorable, logged)
+- [x] Landing with 4 tabs: Policies · Memos · Manuals · Forms
+- [x] Browse: search, category filter, status, shows version + effective + review due
+- [x] Document detail: version history table + download any version + activity timeline
+- [x] Upload new document / new version (version no., effective date, change summary required)
+- [x] Edit metadata (logged with before/after)
+- [x] Archive instead of delete (restore = set active)
 - [ ] Compare versions (changelog; text diff for DOCX→HTML if feasible)
-- [ ] Review-due dates + dashboard widget "due in 30 days"
+- [x] Review-due dates + dashboard "Reviews due" panel
 - [ ] Acknowledgement tracking (if Q7 yes)
 - [ ] Memos: date, from, audience, expiry
 - [ ] Forms: downloadable + category
 - [ ] Optional protected/no-copy viewer (legacy `no-copy.html`)
-- [ ] SharePoint link field (legacy feature)
+- [x] SharePoint link field
 
 ## Phase 5 — Process Library (own page + flow)
 - [ ] Department grid (12 from legacy) → department page → process list → process detail
@@ -112,7 +112,7 @@ process/
 - [ ] Empty/error/loading states
 
 ## Phase 8 — Quality & security
-- [ ] Upload validation (type, size, MIME, rename, outside web root or `.htaccess` deny)
+- [~] Upload validation done (ext whitelist, 20MB, random stored name, served only via PHP download); MIME sniffing not done
 - [ ] Input validation + output escaping (XSS), prepared statements (SQLi), CSRF
 - [ ] Security headers, HTTPS redirect, no CORS `*`
 - [ ] Tests: auth, permissions, versioning, audit
