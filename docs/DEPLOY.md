@@ -51,6 +51,8 @@ DB_HOST=localhost
 DB_NAME="cpuser_process"
 DB_USER="cpuser_app"
 DB_PASS="the-long-password"
+APP_URL="https://process.yourcompany.com"
+MAIL_FROM="Strata Process <no-reply@yourcompany.com>"
 ```
 
 - Put values containing symbols in **double quotes**.
@@ -137,6 +139,12 @@ The 46 processes from the original Process Library are kept out of GitHub becaus
 Afterwards each department's process owner should fill in **who (position/person)** for each step; the original data had none.
 
 ## 10. Verify the deployment
+
+First run the checker on the server. It changes nothing and lists every missing setting with the fix:
+
+```bash
+php database/preflight.php        # exit code 1 if anything is wrong
+```
 
 From any computer (replace the domain):
 
