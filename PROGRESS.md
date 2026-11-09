@@ -12,7 +12,10 @@ Merge 3 legacy tools into ONE system for Strata Staff, deployed on cPanel:
 Rules from the owner: reuse the original users' flow/ideas first, improve, redesign later. Folders: `frontend/ backend/ database/ authentication/ files/ logs/` (+ more if needed). GSAP = mild animation only. Logs matter (policies change every months/year; every edit/upload/new version is dated).
 
 ## Current phase
-**v1 + handbook, memos, links, onboarding checklist, glossary, process templates done. Next: owner review on real data; then polish/redesign**
+**Feature-complete v1 + hardening done (2026-11-09).** Built: users/roles, policy portal, process library (flowchart, versions, "what changed"), handbook, onboarding, glossary, org chart, change requests + email notices, audit viewer, backups + restore drill, security review, paging/indexes, local demo seed.
+**Waiting on:** Sir Bones (updated legacy roles/mapping + data, see `docs/DATA_NEEDED.md`); owner (domain, sender email, brand Q13/Q14); cPanel access for the first real deploy (set `APP_URL`!).
+**Next when unblocked:** import real users (update mapping in `database/import_legacy_users.php`) -> first deploy per `docs/DEPLOY.md` -> verify mail/cron/mysqldump on the host. Optional: DOCX preview, acknowledgements UI, Microsoft 365 SSO.
+Tests: `bash tests/X_smoke.sh http://localhost/process admin@example.test NewPass456` for auth portal process audit handbook features notices scale security, plus `bash tests/restore_drill.sh`.
 
 ## Decisions made
 - Flowcharts: form steps → auto-generated chart. Documents: uploaded files, versioned, all versions kept.
