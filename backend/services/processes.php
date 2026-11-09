@@ -44,6 +44,8 @@ function build_snapshot(array $in): array {
         'duration' => text($in, 'duration', 80),
         'frequency' => text($in, 'frequency', 80),
         'notes' => text($in, 'notes'),
+        // Policies / forms this process relies on (document ids). Shown as links; missing or archived ones are skipped on display.
+        'docs' => array_slice(array_values(array_unique(array_filter(array_map('intval', (array) ($in['docs'] ?? []))))), 0, 30),
         'steps' => $steps,
     ];
 }
@@ -94,6 +96,16 @@ function save_process(array $user, ?int $id, int $deptId, array $in): int {
     audit((int) $user['id'], $before ? 'new_version' : 'create', 'process', $id, $before,
         ['name' => $name, 'status' => $status, 'version_no' => $no, 'changelog' => $changelog, 'snapshot' => $snap]);
     return $id;
+}
+
+// Active documents for a list of ids (silently drops archived/deleted ones).
+function related_documents(array $ids): array {
+    $ids = array_values(array_filter(array_map('intval', $ids)));
+    if (!$ids) return [];
+    $in = implode(',', array_fill(0, count($ids), '?'));
+    $s = db()->prepare("SELECT id, type, title FROM documents WHERE status = 'active' AND id IN ($in) ORDER BY type, title");
+    $s->execute($ids);
+    return $s->fetchAll();
 }
 
 function mark_reviewed(array $user, int $id): void {

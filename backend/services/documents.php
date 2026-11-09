@@ -85,8 +85,9 @@ function create_document(array $user, array $in, array $file): int {
     if (trim($in['changelog'] ?? '') === '') $in['changelog'] = 'Initial version';
 
     $pdo = db();
-    $pdo->prepare('INSERT INTO documents (type, title, category, owner_id, sharepoint_url) VALUES (?,?,?,?,?)')
-        ->execute([$type, $title, trim($in['category'] ?? ''), $user['id'], $sp === '' ? null : $sp]);
+    $memo = memo_fields($type, $in);
+    $pdo->prepare('INSERT INTO documents (type, title, category, owner_id, sharepoint_url, memo_from, audience, expires_on) VALUES (?,?,?,?,?,?,?,?)')
+        ->execute([$type, $title, trim($in['category'] ?? ''), $user['id'], $sp === '' ? null : $sp, ...array_values($memo)]);
     $id = (int) $pdo->lastInsertId();
     try {
         add_version($user, $id, $in, $file);
@@ -94,8 +95,16 @@ function create_document(array $user, array $in, array $file): int {
         $pdo->prepare('DELETE FROM documents WHERE id = ?')->execute([$id]);   // no version = no document
         throw $e;
     }
-    audit((int) $user['id'], 'create', 'document', $id, null, ['type' => $type, 'title' => $title]);
+    audit((int) $user['id'], 'create', 'document', $id, null, ['type' => $type, 'title' => $title] + array_filter($memo));
     return $id;
+}
+
+// Memo-only fields; other types always store NULLs. Throws UserError on a bad expiry date.
+function memo_fields(string $type, array $in): array {
+    if ($type !== 'memo') return ['memo_from' => null, 'audience' => null, 'expires_on' => null];
+    $exp = trim($in['expires_on'] ?? '');
+    if ($exp !== '' && !valid_date($exp)) throw new UserError('Enter a valid expiry date.');
+    return ['memo_from' => trim($in['memo_from'] ?? '') ?: null, 'audience' => trim($in['audience'] ?? '') ?: null, 'expires_on' => $exp ?: null];
 }
 
 function update_document(array $user, int $id, array $in): void {
@@ -108,12 +117,13 @@ function update_document(array $user, int $id, array $in): void {
     if ($sp !== '' && !preg_match('#^https?://#i', $sp)) throw new UserError('SharePoint link must start with http:// or https://');
     if ($due !== '' && !valid_date($due)) throw new UserError('Enter a valid review date.');
 
-    $s = db()->prepare('SELECT title, category, status, review_due, sharepoint_url FROM documents WHERE id = ?');
+    $s = db()->prepare('SELECT type, title, category, status, review_due, sharepoint_url, memo_from, audience, expires_on FROM documents WHERE id = ?');
     $s->execute([$id]);
     if (!($before = $s->fetch())) throw new UserError('Document not found.');
+    $type = array_shift($before);   // type is not editable; keep it out of the before/after diff
     $after = ['title' => $title, 'category' => trim($in['category'] ?? ''), 'status' => $status,
-              'review_due' => $due === '' ? null : $due, 'sharepoint_url' => $sp === '' ? null : $sp];
-    db()->prepare('UPDATE documents SET title=?, category=?, status=?, review_due=?, sharepoint_url=? WHERE id=?')
+              'review_due' => $due === '' ? null : $due, 'sharepoint_url' => $sp === '' ? null : $sp] + memo_fields($type, $in);
+    db()->prepare('UPDATE documents SET title=?, category=?, status=?, review_due=?, sharepoint_url=?, memo_from=?, audience=?, expires_on=? WHERE id=?')
         ->execute([...array_values($after), $id]);
     audit((int) $user['id'], $before['status'] !== $status ? "status_$status" : 'update', 'document', $id, $before, $after);
 }

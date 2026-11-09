@@ -12,7 +12,7 @@ Merge 3 legacy tools into ONE system for Strata Staff, deployed on cPanel:
 Rules from the owner: reuse the original users' flow/ideas first, improve, redesign later. Folders: `frontend/ backend/ database/ authentication/ files/ logs/` (+ more if needed). GSAP = mild animation only. Logs matter (policies change every months/year; every edit/upload/new version is dated).
 
 ## Current phase
-**Phase 9 (deploy docs + cron scripts) done. Next: owner reviews; then new-hire view, memo fields, polish, retention decision**
+**Phases 1-9 v1 complete + new-hire handbook, memo fields, process↔policy links. Next: owner review on real data, then polish/redesign**
 
 ## Decisions made
 - Flowcharts: form steps → auto-generated chart. Documents: uploaded files, versioned, all versions kept.
@@ -64,3 +64,5 @@ Departments found in v2: Accounting & Finance, Building & Facilities, Client Suc
   Remaining logging TODO: debug switch docs, log-file retention/cleanup cron, per-process activity timeline link, "who viewed/downloaded" (downloads only in logs/app-*.log, not audit_log).
 - 2026-11-09 — Wrote `docs/DEPLOY.md` (cPanel). Added `backend/cron/backup.php` (mysqldump + PharData tar of uploads, password via MYSQL_PWD, exit 1 on failure — tested incl. wrong password) and `backend/cron/clean_logs.php` (app/error logs >90d; audit files + audit_log never deleted). Hardened `.htaccess` (dotfiles, .sh/.yml/.json etc. now 403; .well-known stays reachable). `.env.example` now quotes values (special-char passwords parse correctly — tested). All 4 suites green.
   Retention defaults I chose (CONFIRM, TODO Q5): backups 30 days, app/error logs 90 days, audit forever. NOT verified on a real cPanel host: PHP path, mysqldump availability, mail(), Git deploy. `.cpanel.yml` is in the doc, not committed (needs real server path).
+- 2026-11-09 — Retention defaults confirmed by owner (backups 30d, app/error logs 90d, audit forever). Built: memo fields (`database/migrations/002_memo_fields.sql`, service + forms), process↔document links (`snapshot.docs`, `related_documents()`), `/handbook` (printable department packet; defaults to the user's department; dashboard "New here? Start here" card). `tests/handbook_smoke.sh` 19/19; all 5 suites green (auth 9, portal 15, process 22, audit 10, handbook 19). ON DEPLOY run `php database/migrate.php` (002 is new).
+  Not done: per-role onboarding checklist, glossary, duplicate-process-from-template, visual org chart, DOCX preview, version compare, acknowledgements UI, SSO, migrating users from employees.db (TODO Q11), brand/domain (Q13/Q14).

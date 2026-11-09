@@ -36,6 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $f = $_SERVER['REQUEST_METHOD'] === 'POST' ? $_POST : ($proc ? $proc + $snap : ['status' => 'active']);
 $steps = $_SERVER['REQUEST_METHOD'] === 'POST' ? array_values($_POST['steps'] ?? []) : ($snap['steps'] ?? []);
 if (!$steps) $steps = [[]];
+$allDocs = db()->query("SELECT id, type, title FROM documents WHERE status = 'active' ORDER BY type, title")->fetchAll();
+$picked = array_map('intval', (array) ($f['docs'] ?? []));
 $pos = db()->prepare('SELECT title, holder_name FROM positions WHERE department_id = ? ORDER BY title');
 $pos->execute([$deptId]);
 $positions = $pos->fetchAll();
@@ -87,6 +89,10 @@ require __DIR__ . '/../components/app_open.php';
         <select class="form-input" name="status"><?php foreach (PROC_STATUS as $st): ?><option <?= ($f['status'] ?? '') === $st ? 'selected' : '' ?>><?= h($st) ?></option><?php endforeach ?></select></div>
     </div>
     <div class="form-group"><label class="form-label">Notes for new hires (tips, common mistakes, who to ask)</label><textarea class="form-input" name="notes" rows="3"><?= h($f['notes'] ?? '') ?></textarea></div>
+    <div class="form-group"><label class="form-label">Related policies, manuals and forms (Ctrl/Cmd-click to pick several)</label>
+      <select class="form-input" name="docs[]" multiple size="6">
+        <?php foreach ($allDocs as $d): ?><option value="<?= $d['id'] ?>" <?= in_array((int) $d['id'], $picked, true) ? 'selected' : '' ?>><?= h(ucfirst($d['type']) . ': ' . $d['title']) ?></option><?php endforeach ?>
+      </select></div>
   </div>
 
   <div class="panel">

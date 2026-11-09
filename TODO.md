@@ -79,7 +79,7 @@ process/
 - [ ] Compare versions (changelog; text diff for DOCX→HTML if feasible)
 - [x] Review-due dates + dashboard "Reviews due" panel
 - [ ] Acknowledgement tracking (if Q7 yes)
-- [ ] Memos: date, from, audience, expiry
+- [x] Memos: from, audience, expiry (migration 002; expired badge)
 - [ ] Forms: downloadable + category
 - [ ] Optional protected/no-copy viewer (legacy `no-copy.html`)
 - [x] SharePoint link field
@@ -90,8 +90,8 @@ process/
 - [x] Add/edit steps: order (move up/down), who (position + name), what, tools, output, yes/no decision with "No → go to step N"
 - [~] Auto flowchart (HTML/CSS, printable; "No" branch shown as label not arrow; PNG/PDF export = browser print)
 - [~] Positions per department ("Who's who") + "People involved" per process; visual org chart NOT done
-- [ ] New-hire view: "Start here" checklist per role, glossary, links to related policies/forms
-- [ ] Link processes ↔ policies/forms (cross-reference)
+- [~] New-hire view: department handbook `/handbook` (who's who, all processes, flowcharts, printable) + dashboard "Start here" card; per-role checklist and glossary NOT done
+- [x] Link processes ↔ policies/forms/manuals (pick on process form; shown on process page + handbook; archived ones hidden)
 - [x] Version history for processes (every save = new version, old versions viewable)
 - [x] Change request workflow (open → approved/rejected/done; no email notification yet)
 - [x] "Last reviewed" date + Mark reviewed (per-department owner = process_owner role)

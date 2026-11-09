@@ -86,7 +86,9 @@ details.panel[open] > summary { margin-bottom: 1rem; }
 .step-head .btn { padding: 8px 12px; }
 pre.json { font-size: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px; max-height: 260px; overflow: auto; white-space: pre-wrap; word-break: break-word; }
 ul.plain { list-style: none; display: grid; gap: 6px; }
-@media print { .topbar, .noprint, .toolbar, .tabs { display: none !important; } body { background: #fff; } .panel, .flow-node { break-inside: avoid; } }
+.proc-block { margin: 2.5rem 0; }
+.proc-block .tbl { margin-top: 1rem; }
+@media print { .proc-block { break-before: page; } .topbar, .noprint, .toolbar, .tabs { display: none !important; } body { background: #fff; } .panel, .flow-node { break-inside: avoid; } }
 
 @media (max-width: 800px) { .grid2{ grid-template-columns: 1fr; } }
 @media (max-width: 800px) { .auth { grid-template-columns: 1fr; } .panel-left { display: none; } }

@@ -43,6 +43,9 @@ require __DIR__ . '/../components/app_open.php';
 <h1 class="title" data-animate><?= h($doc['title']) ?> <span class="badge <?= $doc['status'] === 'active' ? '' : 'off' ?>"><?= h($doc['status']) ?></span></h1>
 <p class="muted"><?= h(ucfirst($doc['type'])) ?> · <?= h($doc['category'] ?: 'No category') ?> · owner <?= h($doc['owner'] ?? '—') ?>
   <?php if ($doc['review_due']): ?> · review due <?= h($doc['review_due']) ?><?php endif ?>
+  <?php if ($doc['memo_from']): ?> · from <?= h($doc['memo_from']) ?><?php endif ?>
+  <?php if ($doc['audience']): ?> · for <?= h($doc['audience']) ?><?php endif ?>
+  <?php if ($doc['expires_on']): ?> · <?= $doc['expires_on'] < date('Y-m-d') ? '<span class="badge warn">expired' : '<span class="badge">expires' ?> <?= h($doc['expires_on']) ?></span><?php endif ?>
   <?php if ($doc['sharepoint_url']): ?> · <a href="<?= h($doc['sharepoint_url']) ?>" target="_blank" rel="noopener">SharePoint ↗</a><?php endif ?></p>
 
 <?php if ($error): ?><div class="alert error"><?= h($error) ?></div><?php endif ?>
@@ -87,6 +90,11 @@ require __DIR__ . '/../components/app_open.php';
       <div class="form-group"><label class="form-label">Category</label><input class="form-input" name="category" value="<?= h($doc['category']) ?>"></div>
       <div class="form-group"><label class="form-label">Next review date</label><input class="form-input" type="date" name="review_due" value="<?= h($doc['review_due']) ?>"></div>
       <div class="form-group"><label class="form-label">SharePoint link</label><input class="form-input" name="sharepoint_url" value="<?= h($doc['sharepoint_url']) ?>"></div>
+      <?php if ($doc['type'] === 'memo'): ?>
+      <div class="form-group"><label class="form-label">Memo from</label><input class="form-input" name="memo_from" value="<?= h($doc['memo_from']) ?>"></div>
+      <div class="form-group"><label class="form-label">Audience</label><input class="form-input" name="audience" value="<?= h($doc['audience']) ?>"></div>
+      <div class="form-group"><label class="form-label">Expires</label><input class="form-input" type="date" name="expires_on" value="<?= h($doc['expires_on']) ?>"></div>
+      <?php endif ?>
       <div class="form-group"><label class="form-label">Status</label>
         <select class="form-input" name="status"><?php foreach (DOC_STATUS as $st): ?><option <?= $doc['status'] === $st ? 'selected' : '' ?>><?= h($st) ?></option><?php endforeach ?></select></div>
     </div>

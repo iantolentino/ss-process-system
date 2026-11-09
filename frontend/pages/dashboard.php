@@ -12,6 +12,9 @@ require __DIR__ . '/../components/app_open.php';
 <h1 class="title" data-animate>Welcome, <?= h($user['first_name']) ?></h1>
 <div class="cards">
   <a class="card" data-animate href="<?= base_url('process-library') ?>"><h3>Process Library</h3><p>How each department works: steps, people, flowcharts.</p></a>
+  <?php if ($user['department_id']): ?>
+  <a class="card" data-animate href="<?= base_url('handbook') ?>"><h3>New here? Start here</h3><p>Your department's handbook: who's who and every process, step by step.</p></a>
+  <?php endif ?>
   <a class="card" data-animate href="<?= base_url('policies') ?>"><h3>Policy Portal</h3><p>Policies, memos, manuals and forms with version history.</p></a>
 </div>
 <?php if ($due): ?>

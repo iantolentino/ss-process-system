@@ -43,7 +43,10 @@ $from = 'FROM processes p JOIN departments d ON d.id = p.department_id LEFT JOIN
   ?>
   <p class="muted"><a href="<?= base_url('process-library') ?>">← All departments</a></p>
   <h1 class="title" data-animate><?= h($dept['name']) ?></h1>
-  <?php if ($canEdit): ?><p style="margin:1rem 0"><a class="btn inline" style="text-decoration:none;display:inline-block" href="<?= base_url('process-edit?dept=' . $dept['slug']) ?>">+ New process</a></p><?php endif ?>
+  <p style="margin:1rem 0;display:flex;gap:10px;flex-wrap:wrap">
+    <?php if ($canEdit): ?><a class="btn inline" style="text-decoration:none;display:inline-block" href="<?= base_url('process-edit?dept=' . $dept['slug']) ?>">+ New process</a><?php endif ?>
+    <a class="btn ghost inline" style="text-decoration:none;display:inline-block" href="<?= base_url('handbook?dept=' . $dept['slug']) ?>">New-hire handbook (printable)</a>
+  </p>
   <?php if ($error): ?><div class="alert error"><?= h($error) ?></div><?php endif ?>
 
   <div class="table-wrap"><table class="tbl" data-animate>

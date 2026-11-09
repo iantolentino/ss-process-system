@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $q = trim($_GET['q'] ?? '');
 $cat = trim($_GET['category'] ?? '');
 $statuses = $canEdit ? (isset($_GET['archived']) ? "'active','draft','archived'" : "'active','draft'") : "'active'";
-$sql = "SELECT d.id, d.title, d.category, d.status, d.review_due, v.version_no, v.effective_date, v.uploaded_at
+$sql = "SELECT d.id, d.title, d.category, d.status, d.review_due, d.expires_on, d.audience, v.version_no, v.effective_date, v.uploaded_at
         FROM documents d LEFT JOIN document_versions v ON v.id = d.current_version_id
         WHERE d.type = ? AND d.status IN ($statuses)";
 $args = [$type];
@@ -65,11 +65,20 @@ $qs = fn(string $t) => base_url('policies?type=' . $t);
       <div class="form-group"><label class="form-label">Effective date</label><input class="form-input" type="date" name="effective_date" required value="<?= h($_POST['effective_date'] ?? date('Y-m-d')) ?>"></div>
       <div class="form-group"><label class="form-label">Next review date (optional)</label><input class="form-input" type="date" name="review_due" value="<?= h($_POST['review_due'] ?? '') ?>"></div>
       <div class="form-group"><label class="form-label">SharePoint link (optional)</label><input class="form-input" name="sharepoint_url" value="<?= h($_POST['sharepoint_url'] ?? '') ?>"></div>
+      <div class="form-group memo-only" hidden><label class="form-label">Memo from</label><input class="form-input" name="memo_from" value="<?= h($_POST['memo_from'] ?? '') ?>"></div>
+      <div class="form-group memo-only" hidden><label class="form-label">Memo is for (audience)</label><input class="form-input" name="audience" placeholder="e.g. All staff, Finance team" value="<?= h($_POST['audience'] ?? '') ?>"></div>
+      <div class="form-group memo-only" hidden><label class="form-label">Memo expires (optional)</label><input class="form-input" type="date" name="expires_on" value="<?= h($_POST['expires_on'] ?? '') ?>"></div>
       <div class="form-group"><label class="form-label">File (<?= h(implode(', ', DOC_EXT)) ?>; max 20 MB)</label><input class="form-input" type="file" name="file" required></div>
     </div>
     <div class="form-group"><label class="form-label">What is this version? (optional for the first one)</label><input class="form-input" name="changelog" value="<?= h($_POST['changelog'] ?? '') ?>" placeholder="Initial version"></div>
     <button class="btn inline" type="submit">Upload</button>
   </form>
+  <script>
+    // Memo-only fields show when the type is Memo.
+    const sel = document.querySelector('select[name=type]');
+    const sync = () => document.querySelectorAll('.memo-only').forEach(el => el.hidden = sel.value !== 'memo');
+    sel.addEventListener('change', sync); sync();
+  </script>
 </details>
 <?php endif ?>
 
@@ -78,7 +87,9 @@ $qs = fn(string $t) => base_url('policies?type=' . $t);
   <?php foreach ($docs as $d): $over = $d['review_due'] && $d['review_due'] < date('Y-m-d'); ?>
   <tr>
     <td><a href="<?= base_url('document?id=' . $d['id']) ?>"><?= h($d['title']) ?></a>
-      <?php if ($d['status'] !== 'active'): ?> <span class="badge off"><?= h($d['status']) ?></span><?php endif ?></td>
+      <?php if ($d['status'] !== 'active'): ?> <span class="badge off"><?= h($d['status']) ?></span><?php endif ?>
+      <?php if ($d['expires_on'] && $d['expires_on'] < date('Y-m-d')): ?> <span class="badge warn">expired <?= h($d['expires_on']) ?></span><?php endif ?>
+      <?php if ($d['audience']): ?><div class="muted">For: <?= h($d['audience']) ?></div><?php endif ?></td>
     <td><?= h($d['category'] ?: '—') ?></td><td><?= h($d['version_no'] ?? '—') ?></td><td><?= h($d['effective_date'] ?? '—') ?></td>
     <td><?= $d['review_due'] ? '<span class="badge ' . ($over ? 'warn' : '') . '">' . h($d['review_due']) . '</span>' : '—' ?></td>
   </tr>

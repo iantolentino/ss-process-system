@@ -98,6 +98,10 @@ require __DIR__ . '/../components/app_open.php';
 </div>
 <?php endif ?>
 <?php if ($snap['notes']): ?><div class="panel"><h2>Notes for new hires</h2><p><?= nl2br(h($snap['notes'])) ?></p></div><?php endif ?>
+<?php $related = related_documents($snap['docs'] ?? []); if ($related): ?>
+<div class="panel"><h2>Related policies and forms</h2>
+  <ul class="plain"><?php foreach ($related as $d): ?><li><a href="<?= base_url('document?id=' . $d['id']) ?>"><?= h($d['title']) ?></a> <span class="muted">(<?= h($d['type']) ?>)</span></li><?php endforeach ?></ul></div>
+<?php endif ?>
 
 <div class="panel noprint" data-animate>
   <h2>Version history</h2>
