@@ -26,9 +26,15 @@ $sql = "SELECT d.id, d.title, d.category, d.status, d.review_due, d.expires_on, 
 $args = [$type];
 if ($q !== '') { $sql .= ' AND (d.title LIKE ? OR d.category LIKE ?)'; array_push($args, "%$q%", "%$q%"); }
 if ($cat !== '') { $sql .= ' AND d.category = ?'; $args[] = $cat; }
-$st = db()->prepare($sql . ' ORDER BY d.title');
+const PER_PAGE = 50;
+$pg = max(1, (int) ($_GET['p'] ?? 1));
+$st = db()->prepare($sql . ' ORDER BY d.title LIMIT ' . (PER_PAGE + 1) . ' OFFSET ' . ($pg - 1) * PER_PAGE);
 $st->execute($args);
 $docs = $st->fetchAll();
+$pgMore = count($docs) > PER_PAGE;
+$docs = array_slice($docs, 0, PER_PAGE);
+$pgPath = 'policies';
+$pgParams = array_filter(['type' => $type, 'q' => $q, 'category' => $cat, 'archived' => isset($_GET['archived']) ? 1 : '']);
 $cats = db()->query("SELECT DISTINCT category FROM documents WHERE category <> '' ORDER BY category")->fetchAll(PDO::FETCH_COLUMN);
 
 $title = 'Policy Portal';
@@ -95,4 +101,5 @@ $qs = fn(string $t) => base_url('policies?type=' . $t);
   </tr>
   <?php endforeach; if (!$docs): ?><tr><td colspan="5" class="muted">No <?= h(strtolower(DOC_TYPES[$type])) ?> found.</td></tr><?php endif ?>
 </table></div>
+<?php require __DIR__ . '/../components/pager.php'; ?>
 <?php require __DIR__ . '/../components/app_close.php';

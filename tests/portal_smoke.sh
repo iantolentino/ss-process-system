@@ -17,7 +17,7 @@ login "$T/admin" "$ADMIN" "$APW"
 for pair in "$EMP:employee" "$OWN:policy_owner"; do
   curl -s -c "$T/admin" -b "$T/admin" -o /dev/null -d "csrf=$(tok "$T/admin" 'users?new=1')&first_name=T&last_name=User&email=${pair%%:*}&role=${pair##*:}&password=$PW&active=1" "$B/users"
 done
-check "new users listed" "$(curl -s -b "$T/admin" "$B/users" | grep -c "$EMP\|$OWN")" 2
+check "new users listed" "$(curl -s -b "$T/admin" "$B/users?q=$EMP" | grep -c "<td>$EMP</td>")$(curl -s -b "$T/admin" "$B/users?q=$OWN" | grep -c "<td>$OWN</td>")" 11
 check "duplicate email rejected" "$(curl -s -c "$T/admin" -b "$T/admin" -d "csrf=$(tok "$T/admin" users)&first_name=T&last_name=U&email=$EMP&role=employee&password=$PW" "$B/users" | grep -c 'already used')" 1
 login "$T/emp" "$EMP" "$PW"; login "$T/own" "$OWN" "$PW"
 check "employee blocked from /users" "$(code "$T/emp" users)" 403
