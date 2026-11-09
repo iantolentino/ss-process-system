@@ -58,7 +58,7 @@ process/
 - [ ] `audit_log` (who, what, entity, before/after JSON, IP, timestamp) — append-only
 - [ ] `login_attempts`, `password_resets`
 - [x] Migration runner + seed (`database/migrate.php`, `seed.php`)
-- [ ] Scheduled DB backup script (cron on cPanel) → `database/backups/`
+- [x] Backup script `backend/cron/backup.php` (DB + uploads, 30-day prune, non-zero exit on failure); log cleanup `backend/cron/clean_logs.php`
 
 ## Phase 3 — Authentication
 - [x] Login page (legacy design reused)
@@ -119,10 +119,10 @@ process/
 - [ ] Accessibility pass
 
 ## Phase 9 — Deployment (cPanel)
-- [ ] `docs/DEPLOY.md`: create DB/user in cPanel, upload, `.env`, run migrations, cron backups
-- [ ] `.htaccess` (routing, deny `logs/ database/ authentication/ .env`)
-- [ ] Staging check on subdomain before go-live
-- [ ] Rollback plan + backup/restore test
+- [x] `docs/DEPLOY.md`: DB, code (git or zip), .env, PHP limits, migrate/seed, cron, HTTPS, verify checklist, restore, troubleshooting
+- [x] `.htaccess`: routing + deny internals, dotfiles (keeps .well-known), config/source file types; HTTPS redirect block ready to uncomment
+- [ ] Staging check on subdomain before go-live (owner)
+- [x] Rollback + restore steps documented (restore drill on the real host still TODO)
 
 ## Phase 10 — Handover
 - [ ] Admin guide, editor guide, **new-hire guide**

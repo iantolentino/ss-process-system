@@ -1,8 +1,15 @@
 RewriteEngine On
 
+# Production: uncomment to force HTTPS (see docs/DEPLOY.md section 7).
+# RewriteCond %{HTTPS} off
+# RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
 # Never serve internals, config, logs, uploads or dev folders directly.
 RewriteRule ^(backend|authentication|database|logs|files|tests|docs|_brain|_legacy|\.git|frontend/pages|frontend/components)(/|$) - [F,L]
-RewriteRule ^(\.env|.*\.(md|sql|log))$ - [F,L]
+# Dotfiles (.env, .gitignore, .cpanel.yml...) except .well-known, which AutoSSL needs; plus source/config file types.
+RewriteCond %{REQUEST_URI} !^/(.*/)?\.well-known/
+RewriteRule (^|/)\.[^/]+ - [F,L]
+RewriteRule \.(md|sql|log|sh|yml|yaml|json|example|ini|php\.bak)$ - [F,L]
 
 # Everything that is not a real file (css/js/assets) goes to the router.
 RewriteCond %{REQUEST_FILENAME} !-f

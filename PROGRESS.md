@@ -12,7 +12,7 @@ Merge 3 legacy tools into ONE system for Strata Staff, deployed on cPanel:
 Rules from the owner: reuse the original users' flow/ideas first, improve, redesign later. Folders: `frontend/ backend/ database/ authentication/ files/ logs/` (+ more if needed). GSAP = mild animation only. Logs matter (policies change every months/year; every edit/upload/new version is dated).
 
 ## Current phase
-**Phase 6 (audit viewer) done. Next: docs/DEPLOY.md, retention, polish, new-hire view**
+**Phase 9 (deploy docs + cron scripts) done. Next: owner reviews; then new-hire view, memo fields, polish, retention decision**
 
 ## Decisions made
 - Flowcharts: form steps → auto-generated chart. Documents: uploaded files, versioned, all versions kept.
@@ -62,3 +62,5 @@ Departments found in v2: Accounting & Finance, Building & Facilities, Client Suc
   Next: Phase 6 audit viewer page (admin: filter by user/date/entity, CSV), log retention, then DEPLOY.md, templates for new departments, memo fields, glossary/new-hire "Start here".
 - 2026-11-09 — Built `/audit` (admin only; nav link "Audit log"): filters, 50/page, "field: old → new" summary + full before/after JSON, CSV export (max 50k rows, audited, spreadsheet-formula-safe). `tests/audit_smoke.sh` 10/10; all 4 suites green (auth 9, portal 15, process 22, audit 10).
   Remaining logging TODO: debug switch docs, log-file retention/cleanup cron, per-process activity timeline link, "who viewed/downloaded" (downloads only in logs/app-*.log, not audit_log).
+- 2026-11-09 — Wrote `docs/DEPLOY.md` (cPanel). Added `backend/cron/backup.php` (mysqldump + PharData tar of uploads, password via MYSQL_PWD, exit 1 on failure — tested incl. wrong password) and `backend/cron/clean_logs.php` (app/error logs >90d; audit files + audit_log never deleted). Hardened `.htaccess` (dotfiles, .sh/.yml/.json etc. now 403; .well-known stays reachable). `.env.example` now quotes values (special-char passwords parse correctly — tested). All 4 suites green.
+  Retention defaults I chose (CONFIRM, TODO Q5): backups 30 days, app/error logs 90 days, audit forever. NOT verified on a real cPanel host: PHP path, mysqldump availability, mail(), Git deploy. `.cpanel.yml` is in the doc, not committed (needs real server path).
