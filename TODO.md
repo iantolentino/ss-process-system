@@ -3,18 +3,18 @@
 Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(?)` needs owner answer
 
 ## Open questions (owner)
-1. (?) **Stack for cPanel**: PHP 8 + MySQL (works on any cPanel, no special setup) vs keep Python/Flask (needs "Setup Python App"/Passenger; not on every host) vs Node.
-2. (?) **"Ponytail skills"** — what is it? (a skill/plugin, a coding style, a library?) No skill by that name exists in this environment.
-3. (?) Who can do what? Proposed roles: `admin`, `policy_owner` (edits policies), `process_owner` (edits processes of own dept), `employee` (read only). OK?
-4. (?) Do policies get **authored in the system** (rich text) or **uploaded files** (PDF/DOCX) with a version number? Legacy converts DOCX→HTML via mammoth, and links SharePoint. Keep both?
+1. [x] Stack: PHP 8 + MySQL
+2. [x] Ponytail = DietrichGebert/ponytail
+3. [x] Roles confirmed: admin, policy_owner, process_owner, employee
+4. [x] Uploaded files, versioned
 5. (?) Should old versions stay downloadable forever? Retention for logs (e.g. keep 7 years)?
-6. (?) Policy review cycle: want "review due" dates + email/dashboard reminders (policy updates yearly/monthly)?
-7. (?) Acknowledgement: must employees click "I have read this" on new policy versions?
-8. (?) Flowcharts: draw in-app (drag boxes) or write steps and auto-generate the chart? Proposal: steps entered as a form → auto-rendered flowchart (Mermaid) — simplest for non-technical users.
-9. (?) Can the site be public/guest-viewable, or login-required for everything? (Legacy: login-required.)
-10. (?) Email available for password reset (SMTP on cPanel)? Is SSO (Microsoft 365, since SharePoint is used) wanted later?
+6. [x] YES review-due dates + dashboard reminder
+7. [x] NO acknowledgement UI for now (table kept)
+8. [x] Form steps -> auto chart
+9. [x] Login required for everything
+10. [x] Email/password + reset by SMTP email; SSO later
 11. (?) Real employee data: migrate users from `employees.db`? (Never push it to GitHub.)
-12. (?) Is the GitHub repo public or private? (Legacy HTML contains internal policy text.)
+12. [x] Public repo, code only
 13. (?) Domain / cPanel subfolder path for deployment (affects base URL/routes).
 14. (?) Brand: keep legacy fonts/colours for now, redesign later — confirm.
 
@@ -61,13 +61,13 @@ process/
 - [ ] Scheduled DB backup script (cron on cPanel) → `database/backups/`
 
 ## Phase 3 — Authentication
-- [ ] Login page (reuse legacy design/flow)
-- [ ] Secure sessions (httpOnly, SameSite, CSRF token); replace email-header trick
-- [ ] Password hashing (argon2/bcrypt), min length, lockout after N failures
-- [ ] Forgot/reset password (token, expiry)
-- [ ] Role middleware on every route
+- [x] Login page (legacy design reused)
+- [x] Secure sessions (httpOnly, SameSite, CSRF)
+- [x] Password hashing + lockout (5 fails / 15 min)
+- [x] Forgot/reset password (1h token, single use; local dev logs the link, production uses mail())
+- [x] Role helpers: require_login(), require_role() (apply per route as pages are built)
 - [ ] Admin: user management (add/edit/disable, not hard-delete)
-- [ ] Log: login success/fail, logout, role changes
+- [x] Log: login, logout, reset (audit_log + logs/)
 
 ## Phase 4 — Policy Portal (own page)
 - [ ] Landing with 4 tabs: **Policies · Memos · Manuals · Forms**

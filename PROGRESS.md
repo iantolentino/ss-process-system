@@ -12,7 +12,7 @@ Merge 3 legacy tools into ONE system for Strata Staff, deployed on cPanel:
 Rules from the owner: reuse the original users' flow/ideas first, improve, redesign later. Folders: `frontend/ backend/ database/ authentication/ files/ logs/` (+ more if needed). GSAP = mild animation only. Logs matter (policies change every months/year; every edit/upload/new version is dated).
 
 ## Current phase
-**Phase 2 done (schema + migrations + seed + logging/audit helpers). Next: Phase 3 authentication**
+**Phase 3 (auth) done. Next: Phase 4 Policy Portal**
 
 ## Decisions made
 - Flowcharts: form steps → auto-generated chart. Documents: uploaded files, versioned, all versions kept.
@@ -55,3 +55,5 @@ Departments found in v2: Accounting & Finance, Building & Facilities, Client Suc
 - 2026-11-09 — Installed `_brain/`, archived legacy to `_legacy/`, scaffolded folders, `.gitignore`, `git init`. Next: owner confirms PHP/MySQL + repo visibility → Phase 2 schema + migration runner.
 - 2026-11-09 — Reviewed all legacy files, cloned ai-nexus, wrote `TODO.md` + this file. Waiting for answers to open questions (see TODO.md §Open questions).
 - 2026-11-09 — Stack = PHP 8 + MySQL (owner OK), repo stays public, code only. Added `backend/bootstrap.php` (env, db, daily log files, `audit()`), `database/migrations/001_init.sql` (13 tables), `migrate.php`, `seed.php`. Verified locally: migration idempotent, 12 departments, audit row + `logs/audit-*.log` written. Local DB `ss_process` has a TEST admin (admin@example.test) — not for production. Next: Phase 3 auth (sessions, CSRF, lockout, login page from legacy sign-in).
+- 2026-11-09 — Owner answered questions (roles as proposed; review-due dates yes, acknowledgements no for now; login required everywhere; email reset). Built Phase 3: `authentication/auth.php`, front controller `index.php` + `.htaccess` (blocks backend/, logs/, .env etc.), pages login/logout/forgot/reset/dashboard, `frontend/css/base.css` (tokens from legacy), GSAP 3.12.5 mild fade-in. Found+fixed CSRF bug (empty session token passed). `tests/auth_smoke.sh` 9/9 pass. Local test admin password is now changed (reset test) — local only.
+  Still open: Q5 retention, Q11 migrate old users, Q13 domain/subfolder, Q14 brand. TODO: admin user-management page (Phase 3 leftover), SMTP check on the real host.

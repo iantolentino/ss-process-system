@@ -1,0 +1,12 @@
+RewriteEngine On
+
+# Never serve internals, config, logs, uploads or dev folders directly.
+RewriteRule ^(backend|authentication|database|logs|files|tests|docs|_brain|_legacy|\.git|frontend/pages|frontend/components)(/|$) - [F,L]
+RewriteRule ^(\.env|.*\.(md|sql|log))$ - [F,L]
+
+# Everything that is not a real file (css/js/assets) goes to the router.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [L]
+
+Options -Indexes
