@@ -56,6 +56,8 @@ DB_PASS="the-long-password"
 - Put values containing symbols in **double quotes**.
 - `APP_ENV=production` makes password-reset links go out by email. (`local` writes them to a log file instead.)
 - `APP_DEBUG=0` hides error details from visitors. Errors are still written to `logs/error-DATE.log`.
+- `APP_URL` is **required** in production: reset-email links are built from it (never from the request, which an attacker can fake). Include the subfolder if you use one.
+- `MAIL_FROM` is the sender shown on emails; use an address on your own domain so SPF/DKIM pass.
 - Set the file permission of `.env` to **600**.
 
 ## 4. PHP settings

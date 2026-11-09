@@ -121,7 +121,7 @@ process/
 ## Phase 9 — Deployment (cPanel)
 - [x] `docs/DEPLOY.md`: DB, code (git or zip), .env, PHP limits, migrate/seed, cron, HTTPS, verify checklist, restore, troubleshooting
 - [x] `.htaccess`: routing + deny internals, dotfiles (keeps .well-known), config/source file types; HTTPS redirect block ready to uncomment
-- [ ] Staging check on subdomain before go-live (owner)
+- [~] Staging check on subdomain before go-live (owner)
 - [x] Rollback + restore steps documented (restore drill on the real host still TODO)
 
 ## Phase 10 — Handover
