@@ -40,5 +40,5 @@ check "uploads folder not web-readable" "$(curl -s -o /dev/null -w '%{http_code}
 check "employee cannot edit" "$(curl -s -c "$T/emp" -b "$T/emp" -o /dev/null -w '%{http_code}' -d "csrf=$(tok "$T/emp" "document?id=$DOC")&id=$DOC&title=Hacked&status=active" "$B/document")" 403
 curl -s -c "$T/own" -b "$T/own" -o /dev/null -d "csrf=$(tok "$T/own" "document?id=$DOC")&id=$DOC&title=Smoke+Policy+$S&status=archived" "$B/document"
 check "archived hidden from employee" "$(code "$T/emp" "document?id=$DOC")" 404
-check "audit trail recorded" "$(/c/xampp/mysql/bin/mysql.exe -uroot ss_process -N -e "SELECT COUNT(*) FROM audit_log WHERE entity='document' AND entity_id=$DOC")" 4
+check "audit trail recorded (incl. download)" "$(/c/xampp/mysql/bin/mysql.exe -uroot ss_process -N -e "SELECT COUNT(*) FROM audit_log WHERE entity='document' AND entity_id=$DOC")" 5
 rm -rf "$T"; exit $fail

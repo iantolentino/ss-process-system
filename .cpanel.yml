@@ -1,0 +1,7 @@
+---
+deployment:
+  tasks:
+    # Edit USER and the folder before the first deploy; see docs/DEPLOY.md
+    - export DEPLOYPATH=/home/USER/process.yourcompany.com/
+    - /bin/rsync -a --exclude='.git' --exclude='.env' --exclude='files/uploads' --exclude='logs' --exclude='database/backups' --exclude='_brain' ./ $DEPLOYPATH
+    - /usr/local/bin/php $DEPLOYPATH/database/migrate.php
