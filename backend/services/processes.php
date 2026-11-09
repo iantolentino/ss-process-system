@@ -141,10 +141,49 @@ function add_change_request(array $user, int $processId, array $in): void {
     db()->prepare('INSERT INTO change_requests (process_id, requested_by, title, details) VALUES (?,?,?,?)')
         ->execute([$processId, $user['id'], $t, $d]);
     audit((int) $user['id'], 'create', 'change_request', (int) db()->lastInsertId(), null, ['process_id' => $processId, 'title' => $t]);
+
+    // Tell the department's process owners (admins see requests on the page anyway).
+    $p = db()->prepare('SELECT name, department_id FROM processes WHERE id = ?');
+    $p->execute([$processId]);
+    $p = $p->fetch();
+    $o = db()->prepare("SELECT email FROM users WHERE role = 'process_owner' AND department_id = ? AND active = 1 AND id <> ?");
+    $o->execute([$p['department_id'], $user['id']]);
+    foreach ($o->fetchAll(PDO::FETCH_COLUMN) as $email) {
+        notify($email, "Change request: {$p['name']}", "{$user['first_name']} {$user['last_name']} suggests a change to \"{$p['name']}\":\n\n$t\n$d\n\n" . app_url("process?id=$processId"));
+    }
 }
 
 function resolve_change_request(array $user, int $id, string $status): void {
     if (!in_array($status, ['approved', 'rejected', 'done'], true)) throw new UserError('Invalid status.');
     db()->prepare('UPDATE change_requests SET status = ?, reviewed_by = ?, resolved_at = NOW() WHERE id = ?')->execute([$status, $user['id'], $id]);
     audit((int) $user['id'], "request_$status", 'change_request', $id);
+
+    $r = db()->prepare('SELECT c.title, c.process_id, u.email, p.name FROM change_requests c JOIN users u ON u.id = c.requested_by JOIN processes p ON p.id = c.process_id WHERE c.id = ? AND u.active = 1');
+    $r->execute([$id]);
+    if ($r = $r->fetch()) notify($r['email'], "Your change request was $status", "Your request \"{$r['title']}\" for \"{$r['name']}\" is now: $status.\n\n" . app_url("process?id={$r['process_id']}"));
+}
+
+// Plain-language list of what differs between two process snapshots, e.g. "+ Added step: Send offer".
+// shortcut: steps are matched by title, so two steps with the same title are compared as one.
+function diff_snapshots(array $old, array $new): array {
+    $out = [];
+    foreach (['trigger' => 'Starts when', 'frequency' => 'How often', 'duration' => 'How long', 'notes' => 'Notes for new hires'] as $k => $label) {
+        if (($old[$k] ?? '') !== ($new[$k] ?? '')) $out[] = "~ $label changed";
+    }
+    $a = $old['docs'] ?? []; $b = $new['docs'] ?? [];
+    sort($a); sort($b);
+    if ($a !== $b) $out[] = '~ Related documents changed';
+
+    $o = array_column($old['steps'], null, 'title');
+    $n = array_column($new['steps'], null, 'title');
+    foreach ($n as $t => $s) if (!isset($o[$t])) $out[] = "+ Added step: $t";
+    foreach ($o as $t => $s) if (!isset($n[$t])) $out[] = "- Removed step: $t";
+    $labels = ['detail' => 'what they do', 'role' => 'who', 'person' => 'person', 'tools' => 'tools', 'output' => 'output', 'decision' => 'decision', 'no_goto' => '"No" target'];
+    foreach ($n as $t => $s) {
+        if (!isset($o[$t])) continue;
+        $f = array_keys(array_filter($labels, fn($k) => ($o[$t][$k] ?? null) !== ($s[$k] ?? null), ARRAY_FILTER_USE_KEY));
+        if ($f) $out[] = "~ Step \"$t\": " . implode(', ', array_map(fn($k) => $labels[$k], $f)) . ' changed';
+    }
+    if (array_keys(array_intersect_key($o, $n)) !== array_keys(array_intersect_key($n, $o))) $out[] = '~ Step order changed';
+    return $out;
 }

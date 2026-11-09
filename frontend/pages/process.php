@@ -38,6 +38,13 @@ $q->execute([$ver['id']]);
 $snap = json_decode($q->fetchColumn(), true);
 $steps = $snap['steps'];
 
+// "What changed" = this version against the one before it.
+$changes = null;
+if (isset($_GET['changes']) && $ver['version_no'] > 1) {
+    $q->execute([array_column($versions, 'id', 'version_no')[$ver['version_no'] - 1] ?? 0]);
+    $changes = diff_snapshots(json_decode($q->fetchColumn(), true) ?: ['steps' => []], $snap);
+}
+
 // People involved, in order of first appearance.
 $people = [];
 foreach ($steps as $i => $st) {
@@ -76,6 +83,13 @@ require __DIR__ . '/../components/app_open.php';
 <?php if ($isOld): ?><div class="alert error">You are viewing version <?= (int) $ver['version_no'] ?> from <?= h($ver['created_at']) ?>. <a href="<?= base_url('process?id=' . $id) ?>">Go to current version</a></div><?php endif ?>
 <?php if ($error): ?><div class="alert error"><?= h($error) ?></div><?php endif ?>
 
+<?php if ($changes !== null): ?>
+<div class="panel noprint" data-animate><h2>What changed in version <?= (int) $ver['version_no'] ?></h2>
+  <p class="muted"><?= h($ver['changelog']) ?></p>
+  <?php if ($changes): ?><ul class="plain" data-changes><?php foreach ($changes as $c): ?><li><?= h($c) ?></li><?php endforeach ?></ul>
+  <?php else: ?><p class="muted">No differences in the steps or details (only the name, purpose, owner or status changed).</p><?php endif ?>
+</div>
+<?php endif ?>
 <div class="panel" data-animate><h2>Flowchart</h2><?php require __DIR__ . '/../components/flowchart.php'; ?></div>
 
 <div class="panel" data-animate>
@@ -108,7 +122,8 @@ require __DIR__ . '/../components/app_open.php';
   <table class="tbl">
     <?php foreach ($versions as $v): ?>
     <tr><td><a href="<?= base_url('process?id=' . $id . '&v=' . $v['version_no']) ?>">Version <?= (int) $v['version_no'] ?></a></td>
-      <td><?= h($v['created_at']) ?></td><td><?= h($v['who']) ?></td><td><?= h($v['changelog']) ?></td></tr>
+      <td><?= h($v['created_at']) ?></td><td><?= h($v['who']) ?></td><td><?= h($v['changelog']) ?></td>
+      <td><?= $v['version_no'] > 1 ? '<a href="' . base_url('process?id=' . $id . '&v=' . $v['version_no'] . '&changes=1') . '">What changed</a>' : '' ?></td></tr>
     <?php endforeach ?>
   </table>
 </div>

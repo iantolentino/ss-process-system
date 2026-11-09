@@ -35,6 +35,19 @@ function audit(?int $userId, string $action, string $entity, ?int $entityId, $be
     log_line('audit', 'INFO', "$action $entity#$entityId", ['user' => $userId]);
 }
 
+// Absolute link for emails and cron (no request there). APP_URL in .env, e.g. https://example.com/process
+function app_url(string $path = ''): string {
+    return rtrim(env('APP_URL'), '/') . '/' . ltrim($path, '/');
+}
+
+// Sends a plain-text email. Local dev has no mail server, so it goes to the app log instead.
+// shortcut: PHP mail() on cPanel, no queue/retry; a failure is logged, never shown to the user.
+function notify(string $to, string $subject, string $body): void {
+    if (env('APP_ENV') === 'local') { log_line('app', 'DEV', "mail to $to: $subject", ['body' => $body]); return; }
+    $from = env('MAIL_FROM');
+    if (!@mail($to, $subject, $body, $from ? "From: $from" : '')) log_line('error', 'WARN', "mail to $to failed: $subject");
+}
+
 function h($s): string {
     return htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
 }

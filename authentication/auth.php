@@ -116,7 +116,7 @@ function request_reset(string $email): void {
     $link = (empty($_SERVER['HTTPS']) ? 'http' : 'https') . '://' . $_SERVER['HTTP_HOST'] . base_url('reset?token=' . $token);
     // Local dev has no mail server: write the link to the app log instead. Never do this in production.
     if (env('APP_ENV') === 'local') log_line('app', 'DEV', "reset link: $link");
-    else @mail($email, 'Reset your password', "Use this link within 1 hour:\n$link\n");
+    else notify($email, 'Reset your password', "Use this link within 1 hour:\n$link\n");
 }
 
 // Returns an error message, or null on success.

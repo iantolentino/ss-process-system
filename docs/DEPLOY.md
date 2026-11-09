@@ -113,11 +113,13 @@ Session cookies are marked `Secure` automatically when the site is served over H
 |---|---|
 | `0 2 * * *` | `/usr/local/bin/php /home/USER/process.yourcompany.com/backend/cron/backup.php > /dev/null` |
 | `30 2 * * *` | `/usr/local/bin/php /home/USER/process.yourcompany.com/backend/cron/clean_logs.php > /dev/null` |
+| `0 8 * * 1` | `/usr/local/bin/php /home/USER/process.yourcompany.com/backend/cron/review_notices.php > /dev/null` |
 
 - Normal output is discarded; **a failed backup prints to stderr and exits non-zero, so cPanel emails it to the cron email address.** Set that address under *Cron Jobs → Cron Email*.
 - `backup.php` writes `database/backups/db-DATE.sql.gz` (full database, including the audit log) and `files-DATE.tar.gz` (all uploaded documents). Keeps 30 days (`BACKUP_KEEP_DAYS`).
 - **These backups live on the same server.** Also download them regularly, or rely on cPanel/host backups, so a server loss does not take the copies with it.
 - `clean_logs.php` removes `app-*` and `error-*` log files older than 90 days (`LOG_KEEP_DAYS`). It **never** deletes `audit-*` files or anything in the `audit_log` table.
+- `review_notices.php` (weekly) emails admins and policy owners the documents overdue or due within 14 days. Emails (also change-request notices and password resets) use PHP `mail()`; set `APP_URL` (links) and optionally `MAIL_FROM` in `.env`. Locally they are written to `logs/app-*.log` instead.
 - If `mysqldump` is not found, set `MYSQLDUMP=/usr/bin/mysqldump` (or the path from `which mysqldump`) in `.env`.
 
 Run each once by hand to confirm: `php backend/cron/backup.php` should print `backup ok`.
