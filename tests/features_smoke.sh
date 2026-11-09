@@ -74,4 +74,9 @@ check "template notes its source" "$(echo "$FORM" | grep -c 'Copied from')" 1
 check "template starts as draft" "$(echo "$FORM" | grep -c '<option selected>draft')" 1
 check "template list offered" "$(echo "$FORM" | grep -c 'Use as template')" 1
 check "edit existing has no template picker" "$(curl -s -b "$T/po" "$B/process-edit?id=$SRC" | grep -c 'Use as template')" 0
+# --- org chart (Ag reports to Lead; Lead reports to nobody)
+$M "UPDATE positions SET reports_to_id=$PL WHERE id=$PA"
+check "org chart nests reports" "$(curl -s -b "$T/ag" "$B/process-library?dept=client-success" | tr -d '
+' | grep -c "Lead $S</strong>.*<ul class=\"org\"><li><span class=\"org-node\"><strong>Agent $S")" 1
+check "handbook has org chart" "$(curl -s -b "$T/ag" "$B/handbook" | grep -c 'class="org"')" 1
 rm -rf "$T"; exit $fail

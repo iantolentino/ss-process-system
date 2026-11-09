@@ -21,7 +21,7 @@ $ps = db()->prepare("SELECT p.id, p.name, p.purpose, p.owner_position, p.last_re
 $ps->execute([$dept['id']]);
 $procs = $ps->fetchAll();
 
-$pos = db()->prepare('SELECT p.title, p.holder_name, r.title AS reports_to FROM positions p LEFT JOIN positions r ON r.id = p.reports_to_id WHERE p.department_id = ? ORDER BY p.title');
+$pos = db()->prepare('SELECT p.id, p.reports_to_id, p.title, p.holder_name, r.title AS reports_to FROM positions p LEFT JOIN positions r ON r.id = p.reports_to_id WHERE p.department_id = ? ORDER BY p.title');
 $pos->execute([$dept['id']]);
 $positions = $pos->fetchAll();
 
@@ -39,7 +39,7 @@ require __DIR__ . '/../components/app_open.php';
 
 <div class="panel">
   <h2>Who's who</h2>
-  <?php if ($positions): ?>
+  <?php if ($positions): require __DIR__ . '/../components/orgchart.php'; ?>
   <table class="tbl"><tr><th>Position</th><th>Held by</th><th>Reports to</th></tr>
     <?php foreach ($positions as $p): ?><tr><td><?= h($p['title']) ?></td><td><?= h($p['holder_name'] ?: '—') ?></td><td><?= h($p['reports_to'] ?? '—') ?></td></tr><?php endforeach ?>
   </table>

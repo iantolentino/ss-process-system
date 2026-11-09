@@ -97,3 +97,10 @@ ul.plain { list-style: none; display: grid; gap: 6px; }
 
 @media (max-width: 800px) { .grid2{ grid-template-columns: 1fr; } }
 @media (max-width: 800px) { .auth { grid-template-columns: 1fr; } .panel-left { display: none; } }
+
+/* org chart: reporting lines as an indented tree */
+ul.org, ul.org ul { list-style: none; }
+ul.org ul { margin-left: 18px; padding-left: 18px; border-left: 2px solid var(--border); }
+ul.org { margin: .6rem 0 1.2rem; }
+ul.org li { margin: 8px 0; }
+.org-node { display: inline-block; padding: 6px 12px; border: 1px solid var(--border); border-radius: 8px; }

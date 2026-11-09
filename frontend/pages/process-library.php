@@ -64,6 +64,7 @@ $from = 'FROM processes p JOIN departments d ON d.id = p.department_id LEFT JOIN
   <div class="panel" data-animate>
     <h2>Who's who in this department</h2>
     <p class="muted">Positions and who holds them — new hires can see who to ask.</p>
+    <?php if ($positions) require __DIR__ . '/../components/orgchart.php'; ?>
     <div class="table-wrap"><table class="tbl">
       <tr><th>Position</th><th>Held by</th><th>Reports to</th><th></th></tr>
       <?php foreach ($positions as $p): ?>
