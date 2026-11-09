@@ -85,17 +85,17 @@ process/
 - [x] SharePoint link field
 
 ## Phase 5 — Process Library (own page + flow)
-- [ ] Department grid (12 from legacy) → department page → process list → process detail
-- [ ] **Easy add process**: guided form (name, purpose, owner, trigger, steps…), duplicate-from-template, no code needed
-- [ ] **Add/edit steps**: order, who (name + position), what they do, tools/systems, inputs, outputs, time, decision (yes/no branch)
-- [ ] **Auto flowchart** from steps (Mermaid or similar), printable/exportable PNG/PDF
-- [ ] People & positions: org chart per department, "who to ask" contact
+- [x] Department grid (12) → department page → process list → process detail
+- [x] Easy add process: guided form, no code (duplicate-from-template NOT done)
+- [x] Add/edit steps: order (move up/down), who (position + name), what, tools, output, yes/no decision with "No → go to step N"
+- [~] Auto flowchart (HTML/CSS, printable; "No" branch shown as label not arrow; PNG/PDF export = browser print)
+- [~] Positions per department ("Who's who") + "People involved" per process; visual org chart NOT done
 - [ ] New-hire view: "Start here" checklist per role, glossary, links to related policies/forms
 - [ ] Link processes ↔ policies/forms (cross-reference)
-- [ ] Version history for processes (same as policies)
-- [ ] Change request workflow (from `process-library-ticketing.html`): submit → review → approve → published
-- [ ] Per-department process owner + "last reviewed" date
-- [ ] Migrate content from legacy v2 (existing processes)
+- [x] Version history for processes (every save = new version, old versions viewable)
+- [x] Change request workflow (open → approved/rejected/done; no email notification yet)
+- [x] "Last reviewed" date + Mark reviewed (per-department owner = process_owner role)
+- [x] Migrated 46 legacy processes (279 steps) as v1 via database/import_legacy_processes.php
 
 ## Phase 6 — Logging & audit (priority)
 - [ ] Central logger in backend (levels, request id)

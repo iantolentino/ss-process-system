@@ -9,3 +9,4 @@ files/exports/*
 logs/*
 database/backups/*
 !**/.gitkeep
+database/seeds/legacy_*.json
