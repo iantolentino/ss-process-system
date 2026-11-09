@@ -43,6 +43,10 @@ function app_url(string $path = ''): string {
 // Sends a plain-text email. Local dev has no mail server, so it goes to the app log instead.
 // shortcut: PHP mail() on cPanel, no queue/retry; a failure is logged, never shown to the user.
 function notify(string $to, string $subject, string $body): void {
+    $to = str_replace(["", "
+"], '', $to);   // no header injection through names in subjects
+    $subject = str_replace(["", "
+"], ' ', $subject);
     if (env('APP_ENV') === 'local') { log_line('app', 'DEV', "mail to $to: $subject", ['body' => $body]); return; }
     $from = env('MAIL_FROM');
     if (!@mail($to, $subject, $body, $from ? "From: $from" : '')) log_line('error', 'WARN', "mail to $to failed: $subject");
