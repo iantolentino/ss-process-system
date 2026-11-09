@@ -170,6 +170,8 @@ gunzip -c database/backups/db-2026-11-09.sql.gz | mysql -u cpuser_app -p cpuser_
 tar -xzf database/backups/files-2026-11-09.tar.gz -C files/uploads/
 ```
 
+**Drill:** `bash tests/restore_drill.sh` (local) runs a backup, restores it into a scratch database, and checks every table checksum and every stored file's sha256 against the live data. Do the same by hand on the server before go-live: restore into a *new* database, never over the live one, and repeat after major changes.
+
 ## When something breaks
 
 | Symptom | Look at |
