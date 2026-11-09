@@ -126,6 +126,9 @@ function remove_position(array $user, int $deptId, int $id): void {
     $s = db()->prepare('SELECT * FROM positions WHERE id = ? AND department_id = ?');
     $s->execute([$id, $deptId]);
     if (!($p = $s->fetch())) throw new UserError('Position not found.');
+    $used = db()->prepare('SELECT COUNT(*) FROM onboarding_items WHERE position_id = ?');
+    $used->execute([$id]);
+    if ($used->fetchColumn()) throw new UserError('Onboarding checklist items still use this position. Delete or change them first.');
     db()->prepare('UPDATE positions SET reports_to_id = NULL WHERE reports_to_id = ?')->execute([$id]);
     db()->prepare('DELETE FROM positions WHERE id = ?')->execute([$id]);
     audit((int) $user['id'], 'delete', 'position', $id, $p, null);

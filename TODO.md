@@ -90,7 +90,7 @@ process/
 - [x] Add/edit steps: order (move up/down), who (position + name), what, tools, output, yes/no decision with "No → go to step N"
 - [~] Auto flowchart (HTML/CSS, printable; "No" branch shown as label not arrow; PNG/PDF export = browser print)
 - [~] Positions per department ("Who's who") + "People involved" per process; visual org chart NOT done
-- [~] New-hire view: department handbook `/handbook` (who's who, all processes, flowcharts, printable) + dashboard "Start here" card; per-role checklist and glossary NOT done
+- [x] New-hire view: `/handbook` (printable packet incl. glossary) + `/onboarding` per-department/per-position checklist with progress + manager team view + dashboard cards
 - [x] Link processes ↔ policies/forms/manuals (pick on process form; shown on process page + handbook; archived ones hidden)
 - [x] Version history for processes (every save = new version, old versions viewable)
 - [x] Change request workflow (open → approved/rejected/done; no email notification yet)

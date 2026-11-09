@@ -12,7 +12,7 @@ Merge 3 legacy tools into ONE system for Strata Staff, deployed on cPanel:
 Rules from the owner: reuse the original users' flow/ideas first, improve, redesign later. Folders: `frontend/ backend/ database/ authentication/ files/ logs/` (+ more if needed). GSAP = mild animation only. Logs matter (policies change every months/year; every edit/upload/new version is dated).
 
 ## Current phase
-**Phases 1-9 v1 complete + new-hire handbook, memo fields, process↔policy links. Next: owner review on real data, then polish/redesign**
+**v1 + handbook, memos, links, onboarding checklist, glossary, process templates done. Next: owner review on real data; then polish/redesign**
 
 ## Decisions made
 - Flowcharts: form steps → auto-generated chart. Documents: uploaded files, versioned, all versions kept.
@@ -66,3 +66,5 @@ Departments found in v2: Accounting & Finance, Building & Facilities, Client Suc
   Retention defaults I chose (CONFIRM, TODO Q5): backups 30 days, app/error logs 90 days, audit forever. NOT verified on a real cPanel host: PHP path, mysqldump availability, mail(), Git deploy. `.cpanel.yml` is in the doc, not committed (needs real server path).
 - 2026-11-09 — Retention defaults confirmed by owner (backups 30d, app/error logs 90d, audit forever). Built: memo fields (`database/migrations/002_memo_fields.sql`, service + forms), process↔document links (`snapshot.docs`, `related_documents()`), `/handbook` (printable department packet; defaults to the user's department; dashboard "New here? Start here" card). `tests/handbook_smoke.sh` 19/19; all 5 suites green (auth 9, portal 15, process 22, audit 10, handbook 19). ON DEPLOY run `php database/migrate.php` (002 is new).
   Not done: per-role onboarding checklist, glossary, duplicate-process-from-template, visual org chart, DOCX preview, version compare, acknowledgements UI, SSO, migrating users from employees.db (TODO Q11), brand/domain (Q13/Q14).
+- 2026-11-09 — Built (migration 003): users.position_id (set on Users page; must be in the user's department), `/onboarding` (department checklist, items for everyone or one position, week/ongoing, links to a process + a document, tick-off progress, manager team progress + manage items; position removal blocked while items use it), `/glossary` (company-wide or per-department terms; editors = admin/policy_owner/process_owner; audited; shown in handbook), process "Use as template" (copy from any active process into a department as a DRAFT, people names cleared). `tests/features_smoke.sh` 29/29; all 6 suites green (auth 9, portal 15, process 22, audit 10, handbook 19, features 29 = 104). ON DEPLOY run `php database/migrate.php` (003 is new). Smoke tests leave test rows in the local DB; checklist tests are rerunnable.
+  Not done: visual org chart, DOCX preview, version compare, acknowledgements UI, SSO, email notices (change requests, review-due), migrate users from employees.db (Q11), domain/brand (Q13/Q14), real-host deploy check.

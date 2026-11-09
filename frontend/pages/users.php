@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $depts = db()->query('SELECT id, name FROM departments ORDER BY sort')->fetchAll();
+$positions = db()->query('SELECT id, title, department_id FROM positions ORDER BY title')->fetchAll();
 $users = db()->query('SELECT u.*, d.name AS dept FROM users u LEFT JOIN departments d ON d.id = u.department_id ORDER BY u.active DESC, u.last_name, u.first_name')->fetchAll();
 
 // Form shows when creating, editing, or after a failed save (keeps what was typed).
@@ -46,6 +47,9 @@ require __DIR__ . '/../components/app_open.php';
     <div class="form-group"><label class="form-label">Department</label>
       <select class="form-input" name="department_id"><option value="">—</option>
         <?php foreach ($depts as $d): ?><option value="<?= $d['id'] ?>" <?= ($e['department_id'] ?? '') == $d['id'] ? 'selected' : '' ?>><?= h($d['name']) ?></option><?php endforeach ?></select></div>
+    <div class="form-group"><label class="form-label">Position (must be in the same department)</label>
+      <select class="form-input" name="position_id"><option value="">—</option>
+        <?php foreach ($positions as $p): ?><option value="<?= $p['id'] ?>" <?= ($e['position_id'] ?? '') == $p['id'] ? 'selected' : '' ?>><?= h($p['title']) ?> (<?= h(array_column($depts, 'name', 'id')[$p['department_id']] ?? '') ?>)</option><?php endforeach ?></select></div>
     <div class="form-group"><label class="form-label"><?= !empty($e['id']) ? 'New password (leave blank to keep)' : 'Starting password (8+)' ?></label>
       <input class="form-input" type="password" name="password" autocomplete="new-password"></div>
     <div class="form-group"><label class="form-label">Status</label>

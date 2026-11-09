@@ -25,6 +25,10 @@ $pos = db()->prepare('SELECT p.title, p.holder_name, r.title AS reports_to FROM 
 $pos->execute([$dept['id']]);
 $positions = $pos->fetchAll();
 
+$gl = db()->prepare('SELECT term, definition FROM glossary WHERE department_id = ? OR department_id IS NULL ORDER BY term');
+$gl->execute([$dept['id']]);
+$terms = $gl->fetchAll();
+
 $title = $dept['name'] . ' handbook';
 require __DIR__ . '/../components/app_open.php';
 ?>
@@ -75,4 +79,10 @@ require __DIR__ . '/../components/app_open.php';
   <?php if ($related): ?><p class="muted" style="margin-top:.6rem">Related: <?php foreach ($related as $k => $d): ?><?= $k ? ', ' : '' ?><a href="<?= base_url('document?id=' . $d['id']) ?>"><?= h($d['title']) ?></a><?php endforeach ?></p><?php endif ?>
 </section>
 <?php endforeach ?>
+<?php if ($terms): ?>
+<section class="proc-block glossary">
+  <h2 class="title" style="font-size:1.6rem">Glossary</h2>
+  <table class="tbl"><?php foreach ($terms as $t): ?><tr><td><strong><?= h($t['term']) ?></strong></td><td><?= nl2br(h($t['definition'])) ?></td></tr><?php endforeach ?></table>
+</section>
+<?php endif ?>
 <?php require __DIR__ . '/../components/app_close.php';

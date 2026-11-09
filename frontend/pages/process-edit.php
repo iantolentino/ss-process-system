@@ -32,9 +32,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// What the form shows: what was just posted (after an error), else the saved process, else a blank one.
-$f = $_SERVER['REQUEST_METHOD'] === 'POST' ? $_POST : ($proc ? $proc + $snap : ['status' => 'active']);
-$steps = $_SERVER['REQUEST_METHOD'] === 'POST' ? array_values($_POST['steps'] ?? []) : ($snap['steps'] ?? []);
+// New process "from template": prefill from another active process (any department). People are cleared; roles/steps stay.
+$template = null;
+$copyId = (int) ($_GET['copy'] ?? 0);
+if (!$proc && $copyId) {
+    $c = db()->prepare("SELECT p.name, p.purpose, p.owner_position, v.snapshot FROM processes p JOIN process_versions v ON v.id = p.current_version_id WHERE p.id = ? AND p.status = 'active'");
+    $c->execute([$copyId]);
+    if ($src = $c->fetch()) {
+        $ts = json_decode($src['snapshot'], true);
+        $ts['steps'] = array_map(fn($s) => ['person' => ''] + $s, $ts['steps']);
+        $template = ['name' => 'Copy of ' . $src['name'], 'purpose' => $src['purpose'], 'owner_position' => $src['owner_position'], 'status' => 'draft'] + $ts;
+        $template['source'] = $src['name'];
+    }
+}
+$templates = $proc ? [] : db()->query("SELECT p.id, p.name, d.name AS dept FROM processes p JOIN departments d ON d.id = p.department_id WHERE p.status = 'active' ORDER BY d.sort, p.name")->fetchAll();
+
+// What the form shows: what was just posted (after an error), else the saved process, else a template/blank one.
+$f = $_SERVER['REQUEST_METHOD'] === 'POST' ? $_POST : ($proc ? $proc + $snap : ($template ?? ['status' => 'active']));
+$steps = $_SERVER['REQUEST_METHOD'] === 'POST' ? array_values($_POST['steps'] ?? []) : ($snap['steps'] ?? $template['steps'] ?? []);
 if (!$steps) $steps = [[]];
 $allDocs = db()->query("SELECT id, type, title FROM documents WHERE status = 'active' ORDER BY type, title")->fetchAll();
 $picked = array_map('intval', (array) ($f['docs'] ?? []));
@@ -74,6 +89,15 @@ require __DIR__ . '/../components/app_open.php';
 <h1 class="title" data-animate><?= $proc ? 'Edit process' : 'New process' ?> <span class="muted">· <?= h($dept['name']) ?></span></h1>
 <?php if ($error): ?><div class="alert error"><?= h($error) ?></div><?php endif ?>
 
+<?php if (!$proc): ?>
+<form method="get" class="toolbar noprint">
+  <input type="hidden" name="dept" value="<?= h($dept['slug']) ?>">
+  <select class="form-input" name="copy"><option value="">Start from scratch</option>
+    <?php foreach ($templates as $t): ?><option value="<?= $t['id'] ?>" <?= $copyId == $t['id'] ? 'selected' : '' ?>><?= h($t['dept'] . ' — ' . $t['name']) ?></option><?php endforeach ?></select>
+  <button class="btn ghost inline" type="submit">Use as template</button>
+</form>
+<?php if ($template): ?><div class="alert ok">Copied from “<?= h($template['source']) ?>”. People's names were cleared; review every step, then save.</div><?php endif ?>
+<?php endif ?>
 <form method="post" id="process-form">
   <input type="hidden" name="csrf" value="<?= csrf_token() ?>"><input type="hidden" name="id" value="<?= h($id) ?>"><input type="hidden" name="dept" value="<?= h($dept['slug']) ?>">
   <div class="panel">

@@ -44,7 +44,7 @@ function current_user(): ?array {
     session_boot();
     if (empty($_SESSION['uid'])) return null;
     // Re-read each request so a disabled user or changed role takes effect immediately.
-    $s = db()->prepare('SELECT id, first_name, last_name, email, role, department_id FROM users WHERE id = ? AND active = 1');
+    $s = db()->prepare('SELECT id, first_name, last_name, email, role, department_id, position_id FROM users WHERE id = ? AND active = 1');
     $s->execute([$_SESSION['uid']]);
     return $s->fetch() ?: null;
 }
