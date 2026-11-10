@@ -11,12 +11,12 @@ require __DIR__ . '/../components/app_open.php';
 ?>
 <h1 class="title" data-animate>Welcome, <?= h($user['first_name']) ?></h1>
 <div class="cards">
-  <a class="card" data-animate href="<?= base_url('process-library') ?>"><h3>Process Library</h3><p>How each department works: steps, people, flowcharts.</p></a>
+  <a class="card" data-animate href="<?= base_url('process-library') ?>"><h2>Process Library</h2><p>How each department works: steps, people, flowcharts.</p></a>
   <?php if ($user['department_id']): ?>
-  <a class="card" data-animate href="<?= base_url('onboarding') ?>"><h3>My onboarding checklist</h3><p>What to do in your first weeks, with links to the processes and policies.</p></a>
-  <a class="card" data-animate href="<?= base_url('handbook') ?>"><h3>New here? Start here</h3><p>Your department's handbook: who's who and every process, step by step.</p></a>
+  <a class="card" data-animate href="<?= base_url('onboarding') ?>"><h2>My onboarding checklist</h2><p>What to do in your first weeks, with links to the processes and policies.</p></a>
+  <a class="card" data-animate href="<?= base_url('handbook') ?>"><h2>New here? Start here</h2><p>Your department's handbook: who's who and every process, step by step.</p></a>
   <?php endif ?>
-  <a class="card" data-animate href="<?= base_url('policies') ?>"><h3>Policy Portal</h3><p>Policies, memos, manuals and forms with version history.</p></a>
+  <a class="card" data-animate href="<?= base_url('policies') ?>"><h2>Policy Portal</h2><p>Policies, memos, manuals and forms with version history.</p></a>
 </div>
 <?php if ($due): ?>
 <div class="panel" data-animate>

@@ -107,8 +107,8 @@ process/
 
 ## Phase 7 — Frontend polish
 - [ ] Split legacy inline CSS/JS into shared files, design tokens (colours/fonts) for later redesign
-- [ ] GSAP mild: page fade-in, card stagger, panel slide — respect `prefers-reduced-motion`
-- [ ] Responsive, keyboard accessible, print styles
+- [x] GSAP mild: page fade-in, card stagger, panel slide — respect `prefers-reduced-motion`
+- [x] Keyboard accessible (skip link, focus outline, current page marked), print styles; responsive layout exists but is not re-checked on a phone
 - [ ] Empty/error/loading states
 
 ## Phase 8 — Quality & security
@@ -116,7 +116,7 @@ process/
 - [ ] Input validation + output escaping (XSS), prepared statements (SQLi), CSRF
 - [ ] Security headers, HTTPS redirect, no CORS `*`
 - [ ] Tests: auth, permissions, versioning, audit
-- [ ] Accessibility pass
+- [x] Accessibility pass (axe-core: 0 violations on 10 signed-in pages; not tested with a real screen reader or the public sign-in pages)
 
 ## Phase 9 — Deployment (cPanel)
 - [x] `docs/DEPLOY.md`: DB, code (git or zip), .env, PHP limits, migrate/seed, cron, HTTPS, verify checklist, restore, troubleshooting

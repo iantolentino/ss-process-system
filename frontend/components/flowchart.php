@@ -9,7 +9,7 @@
   <li class="flow-node <?= $s['decision'] ? 'decision' : '' ?>">
     <span class="flow-num"><?= $n ?></span>
     <div>
-      <strong><?= h($s['title']) ?></strong>
+      <strong><?= h($s['title']) ?></strong><?php if ($s['decision']): ?><span class="sr"> (yes/no decision)</span><?php endif ?>
       <?php if ($s['role'] || $s['person']): ?>
         <div class="flow-who"><?= h(trim($s['role'] . ($s['person'] ? ' — ' . $s['person'] : ''))) ?></div>
       <?php endif ?>

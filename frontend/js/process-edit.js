@@ -24,6 +24,7 @@ box.addEventListener('change', e => {
 document.getElementById('add-step').addEventListener('click', () => {
   box.append(document.getElementById('step-template').content.cloneNode(true));
   renumber();
+  window.a11y?.(box.lastElementChild);
   box.lastElementChild.querySelector('input').focus();
 });
 

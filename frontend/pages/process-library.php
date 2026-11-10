@@ -111,7 +111,7 @@ $from = 'FROM processes p JOIN departments d ON d.id = p.department_id LEFT JOIN
   <?php else: ?>
     <div class="cards">
       <?php foreach ($depts as $d): ?>
-      <a class="card" data-animate href="<?= base_url('process-library?dept=' . $d['slug']) ?>"><h3><?= h($d['name']) ?></h3><p><?= (int) $d['n'] ?> process<?= $d['n'] == 1 ? '' : 'es' ?></p></a>
+      <a class="card" data-animate href="<?= base_url('process-library?dept=' . $d['slug']) ?>"><h2><?= h($d['name']) ?></h2><p><?= (int) $d['n'] ?> process<?= $d['n'] == 1 ? '' : 'es' ?></p></a>
       <?php endforeach ?>
     </div>
   <?php endif ?>

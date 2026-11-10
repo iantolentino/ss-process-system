@@ -2,8 +2,9 @@
 require __DIR__ . '/head.php';
 $msg = flash();
 ?>
+<a class="skip" href="#main">Skip to content</a>
 <header class="topbar">
-  <nav><strong>Strata Staff</strong>&nbsp;&nbsp;
+  <nav aria-label="Main"><strong>Strata Staff</strong>&nbsp;&nbsp;
     <a href="<?= base_url('dashboard') ?>">Dashboard</a>
     <a href="<?= base_url('policies') ?>">Policy Portal</a>
     <a href="<?= base_url('process-library') ?>">Process Library</a>
@@ -17,5 +18,5 @@ $msg = flash();
     <button type="submit" class="link linkbtn">Sign out</button>
   </form>
 </header>
-<main class="page">
+<main class="page" id="main" tabindex="-1">
 <?php if ($msg): ?><div class="alert ok"><?= h($msg) ?></div><?php endif ?>
