@@ -129,12 +129,25 @@ pre.json { font-size: 12px; background: var(--muted); border-radius: 6px; paddin
 .step-head .form-input { flex: 1; }
 .step-head .btn { min-height: 36px; padding: 6px 12px; }
 
-/* ---- Org chart, diff ---- */
-ul.org, ul.org ul { list-style: none; }
-ul.org ul { margin-left: 18px; padding-left: 18px; border-left: 2px solid var(--border); }
-ul.org { margin: 8px 0 16px; }
-ul.org li { margin: 6px 0; }
-.org-node { display: inline-block; padding: 5px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--background); }
+/* ---- Org chart (hierarchy), diff ---- */
+.org-wrap { overflow-x: auto; padding: 8px 0 16px; }
+ul.org { list-style: none; display: flex; justify-content: center; position: relative; padding-top: 20px; width: max-content; min-width: 100%; margin: 0; }
+ul.org ul { padding-top: 20px; position: relative; }
+ul.org li { list-style: none; text-align: center; position: relative; padding: 20px 8px 0; }
+ul.org li::before, ul.org li::after { content: ""; position: absolute; top: 0; right: 50%; width: 50%; height: 20px; border-top: 2px solid #d4d4d8; }
+ul.org li::after { right: auto; left: 50%; border-left: 2px solid #d4d4d8; }
+ul.org li:only-child::before, ul.org li:only-child::after { display: none; }
+ul.org li:only-child { padding-top: 0; }
+ul.org li:first-child::before, ul.org li:last-child::after { border: 0 none; }
+ul.org li:last-child::before { border-right: 2px solid #d4d4d8; border-radius: 0 6px 0 0; }
+ul.org li:first-child::after { border-radius: 6px 0 0 0; }
+ul.org ul::before { content: ""; position: absolute; top: 0; left: 50%; height: 20px; border-left: 2px solid #d4d4d8; }
+.org-wrap > ul.org { padding-top: 0; }
+.org-wrap > ul.org > li { padding-top: 0; }
+.org-wrap > ul.org > li::before, .org-wrap > ul.org > li::after { display: none; }
+.org-wrap > ul.org > li + li { margin-left: 24px; }
+.org-node { display: inline-block; min-width: 120px; padding: 8px 12px; border: 1px solid #d4d4d8; border-radius: var(--radius); background: var(--background); box-shadow: var(--shadow); font-size: 13px; line-height: 1.35; }
+.org-node .muted { font-size: 12px; }
 pre.diff { overflow-x: auto; font-size: 13px; line-height: 1.5; background: var(--muted); border-radius: var(--radius); padding: 10px 14px; }
 pre.diff .dadd { background: var(--success-bg); color: var(--success); display: block; }
 pre.diff .ddel { background: var(--destructive-bg); color: var(--destructive); display: block; }
