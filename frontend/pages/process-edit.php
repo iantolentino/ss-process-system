@@ -118,7 +118,7 @@ require __DIR__ . '/../components/app_open.php';
 
   <div class="panel">
     <h2>2. Steps</h2>
-    <p class="help" style="margin:-8px 0 12px">List what happens, in order. The flowchart is drawn from this. Say who does each step; new hires rely on it.</p>
+    <p class="help">List what happens, in order. The flowchart is drawn from this. Say who does each step; new hires rely on it.</p>
     <datalist id="positions"><?php foreach ($positions as $p): ?><option value="<?= h($p['title']) ?>"><?= h($p['holder_name']) ?></option><?php endforeach ?></datalist>
     <div id="steps"><?php foreach ($steps as $i => $s) step_row((string) $i, $s); ?></div>
     <button type="button" class="btn ghost inline" id="add-step">+ Add step</button>

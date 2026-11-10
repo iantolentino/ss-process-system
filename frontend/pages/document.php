@@ -67,7 +67,7 @@ require __DIR__ . '/../components/app_open.php';
 
 <div class="panel" data-animate>
   <h2>Versions</h2>
-  <p class="help" style="margin:-6px 0 10px">Every version is kept. The one marked "current" is the one in force. Click a file name to download it.</p>
+  <p class="help">Every version is kept. The one marked "current" is the one in force. Click a file name to download it.</p>
   <div class="table-wrap"><table class="tbl">
     <tr><th>Version</th><th>Applies from</th><th>Uploaded</th><th>By</th><th>What changed</th><th>File</th></tr>
     <?php foreach ($versions as $v): ?>

@@ -47,7 +47,7 @@ $card = fn(string $href, string $ico, string $head, string $text) =>
 <div class="panel" data-animate>
   <h2>Documents to review</h2>
   <?php if ($due): ?>
-  <p class="help" style="margin:-6px 0 10px">Each company document has a date when someone should check it is still right.</p>
+  <p class="help">Each company document has a date when someone should check it is still right.</p>
   <div class="table-wrap"><table class="tbl">
     <?php foreach ($due as $d): ?>
     <tr><td><a href="<?= base_url('document?id=' . $d['id']) ?>"><?= h($d['title']) ?></a></td><td><?= h(ucfirst($d['type'])) ?></td>

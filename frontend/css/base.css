@@ -133,8 +133,8 @@ pre.json { font-size: 12px; background: var(--muted); border-radius: 6px; paddin
 ul.org, ul.org ul { list-style: none; }
 ul.org ul { margin-left: 18px; padding-left: 18px; border-left: 2px solid var(--border); }
 ul.org { margin: 8px 0 16px; }
-ul.org li { margin: 8px 0; }
-.org-node { display: inline-block; padding: 6px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--background); }
+ul.org li { margin: 6px 0; }
+.org-node { display: inline-block; padding: 5px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--background); }
 pre.diff { overflow-x: auto; font-size: 13px; line-height: 1.5; background: var(--muted); border-radius: var(--radius); padding: 10px 14px; }
 pre.diff .dadd { background: var(--success-bg); color: var(--success); display: block; }
 pre.diff .ddel { background: var(--destructive-bg); color: var(--destructive); display: block; }
@@ -181,3 +181,9 @@ main:focus { outline: none; }
 }
 details.step-more > summary { cursor: pointer; }
 details:not(.panel) > summary { cursor: pointer; }
+
+/* ---- Spacing helpers (replace inline styles) ---- */
+.panel > h2 + .help { margin: -6px 0 12px; }
+.panel.tight { padding: 4px 8px; }
+.req { padding: 12px 0; border-bottom: 1px solid var(--border); }
+.req:last-of-type { border-bottom: 0; }

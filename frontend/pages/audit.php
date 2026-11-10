@@ -93,7 +93,7 @@ require __DIR__ . '/../components/app_open.php';
   <a class="btn ghost inline" href="<?= base_url('audit?' . $qs(['export' => 'csv', 'p' => ''])) ?>" title="Download these entries as a spreadsheet">Export CSV</a>
 </form>
 
-<div class="panel table-wrap" style="padding:4px 8px"><table class="tbl" data-animate>
+<div class="panel table-wrap tight"><table class="tbl" data-animate>
   <tr><th>When</th><th>Who</th><th>Did what</th><th>Item</th><th>What changed</th></tr>
   <?php foreach ($rows as $r): $ch = changes($r['before_json'], $r['after_json']); ?>
   <tr>

@@ -105,7 +105,7 @@ $openReqs = count(array_filter($requests, fn($r) => $r['status'] === 'open'));
 </div>
 
 <section data-tabpanel="flowchart"><div class="panel" data-animate><h2>Flowchart</h2>
-  <p class="help" style="margin:-6px 0 8px">Read from top to bottom. A dashed box is a yes/no question.</p><?php require __DIR__ . '/../components/flowchart.php'; ?></div></section>
+  <p class="help">Read from top to bottom. A dashed box is a yes/no question.</p><?php require __DIR__ . '/../components/flowchart.php'; ?></div></section>
 
 <section data-tabpanel="steps"><div class="panel" data-animate>
   <h2>Step by step</h2>
@@ -136,7 +136,7 @@ $openReqs = count(array_filter($requests, fn($r) => $r['status'] === 'open'));
 
 <section data-tabpanel="history" class="noprint"><div class="panel" data-animate>
   <h2>Version history</h2>
-  <p class="help" style="margin:-6px 0 8px">Every save is kept as a new version. Nothing is overwritten.</p>
+  <p class="help">Every save is kept as a new version. Nothing is overwritten.</p>
   <div class="table-wrap"><table class="tbl">
     <?php foreach ($versions as $v): ?>
     <tr><td><a href="<?= base_url('process?id=' . $id . '&v=' . $v['version_no']) ?>">Version <?= (int) $v['version_no'] ?></a></td>
@@ -148,9 +148,9 @@ $openReqs = count(array_filter($requests, fn($r) => $r['status'] === 'open'));
 
 <section data-tabpanel="requests" class="noprint"><div class="panel">
   <h2>Change requests</h2>
-  <p class="help" style="margin:-6px 0 8px">See something wrong or out of date? Tell the process owner here.</p>
+  <p class="help">See something wrong or out of date? Tell the process owner here.</p>
   <?php foreach ($requests as $r): ?>
-  <div style="border-bottom:1px solid var(--border);padding:12px 0">
+  <div class="req">
     <strong><?= h($r['title']) ?></strong> <span class="badge <?= $r['status'] === 'open' ? 'warn' : '' ?>"><?= h($r['status']) ?></span>
     <div class="muted"><?= h($r['who']) ?> · <?= h($r['created_at']) ?></div><div><?= nl2br(h($r['details'])) ?></div>
     <?php if ($canEdit && $r['status'] === 'open'): ?>

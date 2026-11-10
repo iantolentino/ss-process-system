@@ -48,7 +48,7 @@ function term_form(array $depts, array $t = []): void { ?>
 <?php if ($error): ?><div class="alert error"><?= h($error) ?></div><?php endif ?>
 <?php if ($canEdit): ?><details class="panel" <?= $error ? 'open' : '' ?>><summary>Add a term</summary><?php term_form($depts, $error ? $_POST : []) ?></details><?php endif ?>
 
-<div class="panel table-wrap" style="padding:4px 8px"><table class="tbl" data-animate>
+<div class="panel table-wrap tight"><table class="tbl" data-animate>
   <tr><th>Term</th><th>Meaning</th><th>For</th><?php if ($canEdit): ?><th></th><?php endif ?></tr>
   <?php foreach ($terms as $t): ?>
   <tr>

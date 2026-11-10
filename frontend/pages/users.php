@@ -77,7 +77,7 @@ require __DIR__ . '/../components/app_open.php';
 <?php endif ?>
 
 <form class="toolbar" method="get"><input class="form-input" name="q" placeholder="Search by name or email" value="<?= h($q) ?>"><button class="btn inline" type="submit">Search</button></form>
-<div class="panel table-wrap" style="padding:4px 8px"><table class="tbl" data-animate>
+<div class="panel table-wrap tight"><table class="tbl" data-animate>
   <tr><th>Name</th><th>Email</th><th>Can do</th><th>Department</th><th>Last sign-in</th><th>Account</th><th></th></tr>
   <?php foreach ($users as $u): ?>
   <tr>

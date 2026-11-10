@@ -94,7 +94,7 @@ $qs = fn(string $t) => base_url('policies?type=' . $t);
 </details>
 <?php endif ?>
 
-<div class="panel table-wrap" style="padding:4px 8px"><table class="tbl" data-animate>
+<div class="panel table-wrap tight"><table class="tbl" data-animate>
   <tr><th>Title</th><th>Category</th><th>Version</th><th>Effective</th><th>Review due</th></tr>
   <?php foreach ($docs as $d): $over = $d['review_due'] && $d['review_due'] < date('Y-m-d'); ?>
   <tr>

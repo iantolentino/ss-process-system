@@ -86,7 +86,7 @@ $weekLabel = fn($w) => $w === 0 ? 'Ongoing' : "Week $w";
 <?php if ($manage): ?>
 <div class="panel" data-animate>
   <h2>Team progress</h2>
-  <p class="help" style="margin:-6px 0 10px">How far each person in the department has got.</p>
+  <p class="help">How far each person in the department has got.</p>
   <table class="tbl"><tr><th>Person</th><th>Position</th><th>Done</th></tr>
     <?php foreach ($team as $m): ?><tr><td><?= h($m['name']) ?></td><td><?= h($m['position'] ?? '—') ?></td><td><?= (int) $m['done'] ?> / <?= (int) $m['total'] ?></td></tr>
     <?php endforeach; if (!$team): ?><tr><td colspan="3" class="muted">No one is assigned to this department yet (set their department under People &amp; roles).</td></tr><?php endif ?>

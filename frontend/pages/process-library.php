@@ -51,7 +51,7 @@ $from = 'FROM processes p JOIN departments d ON d.id = p.department_id LEFT JOIN
   </div></div>
   <?php if ($error): ?><div class="alert error"><?= h($error) ?></div><?php endif ?>
 
-  <div class="panel table-wrap" style="padding:4px 8px"><table class="tbl" data-animate>
+  <div class="panel table-wrap tight"><table class="tbl" data-animate>
     <tr><th>Process</th><th>Owner</th><th>Steps</th><th>Version</th><th>Last checked</th></tr>
     <?php foreach ($rows as $r): ?>
     <tr>
@@ -65,7 +65,7 @@ $from = 'FROM processes p JOIN departments d ON d.id = p.department_id LEFT JOIN
 
   <div class="panel" data-animate>
     <h2>Who's who in this department</h2>
-    <p class="help" style="margin:-6px 0 10px">Positions and who holds them, so new hires know who to ask.</p>
+    <p class="help">Positions and who holds them, so new hires know who to ask.</p>
     <?php if ($positions) require __DIR__ . '/../components/orgchart.php'; ?>
     <div class="table-wrap"><table class="tbl">
       <tr><th>Position</th><th>Held by</th><th>Reports to</th><th></th></tr>
@@ -107,7 +107,7 @@ $from = 'FROM processes p JOIN departments d ON d.id = p.department_id LEFT JOIN
     <button class="btn inline" type="submit">Search</button>
   </form>
   <?php if ($q !== ''): ?>
-    <div class="panel table-wrap" style="padding:4px 8px"><table class="tbl" data-animate>
+    <div class="panel table-wrap tight"><table class="tbl" data-animate>
       <tr><th>Process</th><th>Department</th><th>Steps</th></tr>
       <?php foreach ($found as $r): ?><tr><td><a href="<?= base_url('process?id=' . $r['id']) ?>"><?= h($r['name']) ?></a></td><td><?= h($r['dept']) ?></td><td><?= (int) $r['steps'] ?></td></tr>
       <?php endforeach; if (!$found): ?><tr><td colspan="3" class="muted">Nothing matched “<?= h($q) ?>”.</td></tr><?php endif ?>
