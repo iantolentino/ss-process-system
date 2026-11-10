@@ -26,5 +26,5 @@ $M "DELETE FROM documents WHERE title LIKE 'Bulk $S %'"
 # users: search + edit by id works for anyone, even past page 1
 UID1=$($M "SELECT id FROM users ORDER BY id DESC LIMIT 1")
 check "users search finds admin" "$(curl -s -b "$T/admin" "$B/users?q=$ADMIN" | grep -c "<td>$ADMIN</td>")" 1
-check "edit form opens by id" "$(curl -s -b "$T/admin" "$B/users?edit=$UID1" | grep -c '<h2>Edit user</h2>')" 1
+check "edit form opens by id" "$(curl -s -b "$T/admin" "$B/users?edit=$UID1" | grep -c '<h2>Edit person</h2>')" 1
 rm -rf "$T"; exit $fail

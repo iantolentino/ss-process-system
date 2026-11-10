@@ -54,10 +54,10 @@ $timeline = $tl->fetchAll();
 $title = $doc['title'];
 require __DIR__ . '/../components/app_open.php';
 ?>
-<p class="muted"><a href="<?= base_url('policies?type=' . $doc['type']) ?>">← <?= h(DOC_TYPES[$doc['type']]) ?></a></p>
+<p class="crumbs"><a href="<?= base_url('policies') ?>">Policies &amp; forms</a> / <a href="<?= base_url('policies?type=' . $doc['type']) ?>"><?= h(DOC_TYPES[$doc['type']]) ?></a></p>
 <h1 class="title" data-animate><?= h($doc['title']) ?> <span class="badge <?= $doc['status'] === 'active' ? '' : 'off' ?>"><?= h($doc['status']) ?></span></h1>
 <p class="muted"><?= h(ucfirst($doc['type'])) ?> · <?= h($doc['category'] ?: 'No category') ?> · owner <?= h($doc['owner'] ?? '—') ?>
-  <?php if ($doc['review_due']): ?> · review due <?= h($doc['review_due']) ?><?php endif ?>
+  <?php if ($doc['review_due']): ?> · check again by <?= h($doc['review_due']) ?><?php endif ?>
   <?php if ($doc['memo_from']): ?> · from <?= h($doc['memo_from']) ?><?php endif ?>
   <?php if ($doc['audience']): ?> · for <?= h($doc['audience']) ?><?php endif ?>
   <?php if ($doc['expires_on']): ?> · <?= $doc['expires_on'] < date('Y-m-d') ? '<span class="badge warn">expired' : '<span class="badge">expires' ?> <?= h($doc['expires_on']) ?></span><?php endif ?>
@@ -66,9 +66,10 @@ require __DIR__ . '/../components/app_open.php';
 <?php if ($error): ?><div class="alert error"><?= h($error) ?></div><?php endif ?>
 
 <div class="panel" data-animate>
-  <h2>Version history</h2>
+  <h2>Versions</h2>
+  <p class="help" style="margin:-6px 0 10px">Every version is kept. The one marked "current" is the one in force. Click a file name to download it.</p>
   <div class="table-wrap"><table class="tbl">
-    <tr><th>Version</th><th>Effective</th><th>Uploaded</th><th>By</th><th>What changed</th><th></th></tr>
+    <tr><th>Version</th><th>Applies from</th><th>Uploaded</th><th>By</th><th>What changed</th><th>File</th></tr>
     <?php foreach ($versions as $v): ?>
     <tr>
       <td><?= h($v['version_no']) ?> <?= $v['id'] == $doc['current_version_id'] ? '<span class="badge">current</span>' : '' ?></td>
@@ -103,8 +104,8 @@ require __DIR__ . '/../components/app_open.php';
     <input type="hidden" name="csrf" value="<?= csrf_token() ?>"><input type="hidden" name="id" value="<?= $id ?>"><input type="hidden" name="action" value="version">
     <div class="grid2">
       <div class="form-group"><label class="form-label">Version</label><input class="form-input" name="version_no" required value="<?= h($_POST['version_no'] ?? $next) ?>"></div>
-      <div class="form-group"><label class="form-label">Effective date</label><input class="form-input" type="date" name="effective_date" required value="<?= h($_POST['effective_date'] ?? date('Y-m-d')) ?>"></div>
-      <div class="form-group"><label class="form-label">Next review date</label><input class="form-input" type="date" name="review_due" value="<?= h($_POST['review_due'] ?? '') ?>"></div>
+      <div class="form-group"><label class="form-label">Starts to apply on</label><input class="form-input" type="date" name="effective_date" required value="<?= h($_POST['effective_date'] ?? date('Y-m-d')) ?>"></div>
+      <div class="form-group"><label class="form-label">Check again on</label><input class="form-input" type="date" name="review_due" value="<?= h($_POST['review_due'] ?? '') ?>"></div>
       <div class="form-group"><label class="form-label">File</label><input class="form-input" type="file" name="file" required></div>
     </div>
     <div class="form-group"><label class="form-label">What changed? (required)</label><input class="form-input" name="changelog" required value="<?= h($_POST['changelog'] ?? '') ?>"></div>
@@ -113,13 +114,13 @@ require __DIR__ . '/../components/app_open.php';
 </details>
 
 <details class="panel" <?= $error && ($_POST['action'] ?? '') !== 'version' ? 'open' : '' ?>>
-  <summary>Edit details / archive</summary>
+  <summary>Edit details or archive</summary>
   <form method="post">
     <input type="hidden" name="csrf" value="<?= csrf_token() ?>"><input type="hidden" name="id" value="<?= $id ?>">
     <div class="grid2">
       <div class="form-group"><label class="form-label">Title</label><input class="form-input" name="title" required value="<?= h($doc['title']) ?>"></div>
       <div class="form-group"><label class="form-label">Category</label><input class="form-input" name="category" value="<?= h($doc['category']) ?>"></div>
-      <div class="form-group"><label class="form-label">Next review date</label><input class="form-input" type="date" name="review_due" value="<?= h($doc['review_due']) ?>"></div>
+      <div class="form-group"><label class="form-label">Check again on</label><input class="form-input" type="date" name="review_due" value="<?= h($doc['review_due']) ?>"></div>
       <div class="form-group"><label class="form-label">SharePoint link</label><input class="form-input" name="sharepoint_url" value="<?= h($doc['sharepoint_url']) ?>"></div>
       <?php if ($doc['type'] === 'memo'): ?>
       <div class="form-group"><label class="form-label">Memo from</label><input class="form-input" name="memo_from" value="<?= h($doc['memo_from']) ?>"></div>
@@ -127,7 +128,7 @@ require __DIR__ . '/../components/app_open.php';
       <div class="form-group"><label class="form-label">Expires</label><input class="form-input" type="date" name="expires_on" value="<?= h($doc['expires_on']) ?>"></div>
       <?php endif ?>
       <div class="form-group"><label class="form-label">Status</label>
-        <select class="form-input" name="status"><?php foreach (DOC_STATUS as $st): ?><option <?= $doc['status'] === $st ? 'selected' : '' ?>><?= h($st) ?></option><?php endforeach ?></select></div>
+        <select class="form-input" name="status"><?php foreach (DOC_STATUS as $st): ?><option <?= $doc['status'] === $st ? 'selected' : '' ?>><?= h($st) ?></option><?php endforeach ?></select><p class="help">Archived documents are hidden from staff but never deleted.</p></div>
     </div>
     <button class="btn inline" type="submit">Save</button>
   </form>
@@ -135,7 +136,7 @@ require __DIR__ . '/../components/app_open.php';
 <?php endif ?>
 
 <div class="panel" data-animate>
-  <h2>Activity</h2>
+  <h2>Activity on this document</h2>
   <table class="tbl">
     <?php foreach ($timeline as $t): ?><tr><td><?= h($t['at']) ?></td><td><?= h(str_replace('_', ' ', $t['action'])) ?></td><td><?= h($t['who'] ?? 'system') ?></td></tr><?php endforeach ?>
   </table>

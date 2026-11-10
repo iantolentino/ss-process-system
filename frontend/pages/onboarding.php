@@ -49,16 +49,19 @@ if ($manage) {
     $docs = db()->query("SELECT id, type, title FROM documents WHERE status = 'active' ORDER BY type, title")->fetchAll();
 }
 
-$title = 'Onboarding';
+$title = 'My checklist';
 require __DIR__ . '/../components/app_open.php';
 $weekLabel = fn($w) => $w === 0 ? 'Ongoing' : "Week $w";
 ?>
-<h1 class="title" data-animate>Onboarding <span class="muted">· <?= h($dept['name']) ?></span></h1>
+<div class="page-head"><div>
+  <h1 class="title" data-animate>Onboarding checklist <span class="muted">· <?= h($dept['name']) ?></span></h1>
+  <p class="lead"><?= $mine ? 'Things to do in your first weeks. Tick each one when you are done; your progress is saved.' : 'The checklist new people in this department work through.' ?></p>
+</div></div>
 <?php if ($error): ?><div class="alert error"><?= h($error) ?></div><?php endif ?>
 
 <?php if ($mine): ?>
   <?php if ($items): $pct = (int) round($done / count($items) * 100); ?>
-  <p class="muted"><?= $done ?> of <?= count($items) ?> done (<?= $pct ?>%)</p>
+  <p class="muted"><strong><?= $done ?> of <?= count($items) ?> done</strong> (<?= $pct ?>%)</p>
   <div class="bar" role="progressbar" aria-valuenow="<?= $pct ?>" aria-valuemin="0" aria-valuemax="100"><span style="width:<?= $pct ?>%"></span></div>
   <?php foreach ($weeks as $w => $list): ?>
   <div class="panel" data-animate><h2><?= $weekLabel($w) ?></h2>
@@ -76,22 +79,23 @@ $weekLabel = fn($w) => $w === 0 ? 'Ongoing' : "Week $w";
     <?php endforeach ?>
   </div>
   <?php endforeach ?>
-  <p class="muted"><a href="<?= base_url('handbook?dept=' . $slug) ?>">Department handbook</a> · <a href="<?= base_url('glossary') ?>">Glossary</a></p>
-  <?php else: ?><p class="muted">No checklist has been set up for your department yet.</p><?php endif ?>
+  <p class="muted">Need background? Open the <a href="<?= base_url('handbook?dept=' . $slug) ?>">department handbook</a> or the <a href="<?= base_url('glossary') ?>">glossary</a>.</p>
+  <?php else: ?><div class="empty">No checklist has been set up for your department yet. Ask your manager, or open <a href="<?= base_url('handbook?dept=' . $slug) ?>">Start here</a> to read how the team works.</div><?php endif ?>
 <?php endif ?>
 
 <?php if ($manage): ?>
 <div class="panel" data-animate>
   <h2>Team progress</h2>
+  <p class="help" style="margin:-6px 0 10px">How far each person in the department has got.</p>
   <table class="tbl"><tr><th>Person</th><th>Position</th><th>Done</th></tr>
     <?php foreach ($team as $m): ?><tr><td><?= h($m['name']) ?></td><td><?= h($m['position'] ?? '—') ?></td><td><?= (int) $m['done'] ?> / <?= (int) $m['total'] ?></td></tr>
-    <?php endforeach; if (!$team): ?><tr><td colspan="3" class="muted">No one is assigned to this department yet (set it on the Users page).</td></tr><?php endif ?>
+    <?php endforeach; if (!$team): ?><tr><td colspan="3" class="muted">No one is assigned to this department yet (set their department under People &amp; roles).</td></tr><?php endif ?>
   </table>
 </div>
 
-<details class="panel" <?= $error ? 'open' : '' ?>><summary>Manage the checklist for <?= h($dept['name']) ?></summary>
+<details class="panel" <?= $error ? 'open' : '' ?>><summary>Edit the checklist for <?= h($dept['name']) ?></summary>
   <table class="tbl" style="margin:1rem 0">
-    <tr><th>When</th><th>Item</th><th>For</th><th></th></tr>
+    <tr><th>When</th><th>What</th><th>For</th><th></th></tr>
     <?php foreach ($allItems as $i): ?>
     <tr><td><?= $weekLabel((int) $i['week_no']) ?></td><td><?= h($i['title']) ?></td><td><?= h($i['position'] ?? 'Everyone') ?></td>
       <td><form method="post" onsubmit="return confirm('Delete this item for everyone?')"><input type="hidden" name="csrf" value="<?= csrf_token() ?>">
@@ -101,19 +105,19 @@ $weekLabel = fn($w) => $w === 0 ? 'Ongoing' : "Week $w";
   <form method="post">
     <input type="hidden" name="csrf" value="<?= csrf_token() ?>"><input type="hidden" name="action" value="add">
     <div class="grid2">
-      <div class="form-group"><label class="form-label">Item</label><input class="form-input" name="title" required placeholder="e.g. Shadow a support call"></div>
-      <div class="form-group"><label class="form-label">Week (0 = ongoing)</label><input class="form-input" type="number" name="week_no" min="0" max="12" value="1"></div>
-      <div class="form-group"><label class="form-label">For position (blank = everyone)</label>
+      <div class="form-group"><label class="form-label">What should they do?</label><input class="form-input" name="title" required placeholder="e.g. Shadow a support call"></div>
+      <div class="form-group"><label class="form-label">In which week?</label><input class="form-input" type="number" name="week_no" min="0" max="12" value="1"><p class="help">Use 0 for something they keep doing, like a yearly review.</p></div>
+      <div class="form-group"><label class="form-label">For whom?</label>
         <select class="form-input" name="position_id"><option value="">Everyone in the department</option>
           <?php foreach ($positions as $p): ?><option value="<?= $p['id'] ?>"><?= h($p['title']) ?></option><?php endforeach ?></select></div>
-      <div class="form-group"><label class="form-label">Link a process (optional)</label>
+      <div class="form-group"><label class="form-label">Process to read (optional)</label>
         <select class="form-input" name="process_id"><option value="">—</option>
           <?php foreach ($procs as $p): ?><option value="<?= $p['id'] ?>"><?= h($p['name']) ?></option><?php endforeach ?></select></div>
-      <div class="form-group"><label class="form-label">Link a policy / form (optional)</label>
+      <div class="form-group"><label class="form-label">Policy or form to read (optional)</label>
         <select class="form-input" name="document_id"><option value="">—</option>
           <?php foreach ($docs as $d): ?><option value="<?= $d['id'] ?>"><?= h(ucfirst($d['type']) . ': ' . $d['title']) ?></option><?php endforeach ?></select></div>
     </div>
-    <div class="form-group"><label class="form-label">Details (optional)</label><textarea class="form-input" name="detail" rows="2"></textarea></div>
+    <div class="form-group"><label class="form-label">Extra instructions (optional)</label><textarea class="form-input" name="detail" rows="2"></textarea></div>
     <button class="btn inline" type="submit">Add item</button>
   </form>
 </details>

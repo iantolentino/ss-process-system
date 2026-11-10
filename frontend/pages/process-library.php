@@ -41,16 +41,18 @@ $from = 'FROM processes p JOIN departments d ON d.id = p.department_id LEFT JOIN
     $pos->execute([$dept['id']]);
     $positions = $pos->fetchAll();
   ?>
-  <p class="muted"><a href="<?= base_url('process-library') ?>">← All departments</a></p>
-  <h1 class="title" data-animate><?= h($dept['name']) ?></h1>
-  <p style="margin:1rem 0;display:flex;gap:10px;flex-wrap:wrap">
-    <?php if ($canEdit): ?><a class="btn inline" style="text-decoration:none;display:inline-block" href="<?= base_url('process-edit?dept=' . $dept['slug']) ?>">+ New process</a><?php endif ?>
-    <a class="btn ghost inline" style="text-decoration:none;display:inline-block" href="<?= base_url('handbook?dept=' . $dept['slug']) ?>">New-hire handbook (printable)</a>
-  </p>
+  <p class="crumbs"><a href="<?= base_url('process-library') ?>">Processes</a> / <?= h($dept['name']) ?></p>
+  <div class="page-head"><div>
+    <h1 class="title" data-animate><?= h($dept['name']) ?></h1>
+    <p class="lead">How work is done in this department. Open a process to see its steps, who does what, and the flowchart.</p>
+  </div><div class="actions">
+    <?php if ($canEdit): ?><a class="btn inline" href="<?= base_url('process-edit?dept=' . $dept['slug']) ?>">New process</a><?php endif ?>
+    <a class="btn ghost inline" href="<?= base_url('handbook?dept=' . $dept['slug']) ?>" title="Everything a new person needs, on one printable page">Start-here handbook</a>
+  </div></div>
   <?php if ($error): ?><div class="alert error"><?= h($error) ?></div><?php endif ?>
 
-  <div class="table-wrap"><table class="tbl" data-animate>
-    <tr><th>Process</th><th>Owner</th><th>Steps</th><th>Version</th><th>Last reviewed</th></tr>
+  <div class="panel table-wrap" style="padding:4px 8px"><table class="tbl" data-animate>
+    <tr><th>Process</th><th>Owner</th><th>Steps</th><th>Version</th><th>Last checked</th></tr>
     <?php foreach ($rows as $r): ?>
     <tr>
       <td><a href="<?= base_url('process?id=' . $r['id']) ?>"><?= h($r['name']) ?></a>
@@ -58,12 +60,12 @@ $from = 'FROM processes p JOIN departments d ON d.id = p.department_id LEFT JOIN
         <div class="muted"><?= h(mb_strimwidth($r['purpose'], 0, 120, '…')) ?></div></td>
       <td><?= h($r['owner_position'] ?: '—') ?></td><td><?= (int) $r['steps'] ?></td><td>v<?= (int) $r['version_no'] ?></td><td><?= h($r['last_reviewed_at'] ?? 'never') ?></td>
     </tr>
-    <?php endforeach; if (!$rows): ?><tr><td colspan="5" class="muted">No processes documented yet.</td></tr><?php endif ?>
+    <?php endforeach; if (!$rows): ?><tr><td colspan="5" class="muted">No processes written down for this department yet.<?= $canEdit ? ' Use “New process” to add the first one.' : '' ?></td></tr><?php endif ?>
   </table></div>
 
   <div class="panel" data-animate>
     <h2>Who's who in this department</h2>
-    <p class="muted">Positions and who holds them — new hires can see who to ask.</p>
+    <p class="help" style="margin:-6px 0 10px">Positions and who holds them, so new hires know who to ask.</p>
     <?php if ($positions) require __DIR__ . '/../components/orgchart.php'; ?>
     <div class="table-wrap"><table class="tbl">
       <tr><th>Position</th><th>Held by</th><th>Reports to</th><th></th></tr>
@@ -77,11 +79,11 @@ $from = 'FROM processes p JOIN departments d ON d.id = p.department_id LEFT JOIN
     <?php if ($canEdit): ?>
     <form method="post" class="toolbar" style="margin:1rem 0 0">
       <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
-      <input class="form-input" name="title" placeholder="Position title" required>
-      <input class="form-input" name="holder_name" placeholder="Person's name">
-      <select class="form-input" name="reports_to_id"><option value="">Reports to…</option>
+      <input class="form-input" name="title" placeholder="Position, e.g. Team Lead" aria-label="Position title" required>
+      <input class="form-input" name="holder_name" placeholder="Person in that position" aria-label="Person's name">
+      <select class="form-input" name="reports_to_id" aria-label="Reports to"><option value="">Reports to…</option>
         <?php foreach ($positions as $p): ?><option value="<?= $p['id'] ?>"><?= h($p['title']) ?></option><?php endforeach ?></select>
-      <button class="btn inline" type="submit">Add</button>
+      <button class="btn inline" type="submit">Add position</button>
     </form>
     <?php endif ?>
   </div>
@@ -96,14 +98,16 @@ $from = 'FROM processes p JOIN departments d ON d.id = p.department_id LEFT JOIN
         $found = $st->fetchAll();
     }
   ?>
-  <h1 class="title" data-animate>Process Library</h1>
-  <p class="muted">How work gets done, department by department: who does what, in what order.</p>
-  <form class="toolbar" method="get" style="margin-top:1.2rem">
-    <input class="form-input" name="q" placeholder="Search all processes and steps" value="<?= h($q) ?>">
+  <div class="page-head"><div>
+    <h1 class="title" data-animate>Processes</h1>
+    <p class="lead">How work gets done, department by department: who does what, in what order. Pick your department, or search for a job.</p>
+  </div></div>
+  <form class="toolbar" method="get">
+    <input class="form-input" name="q" placeholder="Search, e.g. leave, invoice, onboarding" aria-label="Search processes" value="<?= h($q) ?>">
     <button class="btn inline" type="submit">Search</button>
   </form>
   <?php if ($q !== ''): ?>
-    <div class="table-wrap"><table class="tbl" data-animate>
+    <div class="panel table-wrap" style="padding:4px 8px"><table class="tbl" data-animate>
       <tr><th>Process</th><th>Department</th><th>Steps</th></tr>
       <?php foreach ($found as $r): ?><tr><td><a href="<?= base_url('process?id=' . $r['id']) ?>"><?= h($r['name']) ?></a></td><td><?= h($r['dept']) ?></td><td><?= (int) $r['steps'] ?></td></tr>
       <?php endforeach; if (!$found): ?><tr><td colspan="3" class="muted">Nothing matched “<?= h($q) ?>”.</td></tr><?php endif ?>
@@ -111,7 +115,7 @@ $from = 'FROM processes p JOIN departments d ON d.id = p.department_id LEFT JOIN
   <?php else: ?>
     <div class="cards">
       <?php foreach ($depts as $d): ?>
-      <a class="card" data-animate href="<?= base_url('process-library?dept=' . $d['slug']) ?>"><h2><?= h($d['name']) ?></h2><p><?= (int) $d['n'] ?> process<?= $d['n'] == 1 ? '' : 'es' ?></p></a>
+      <a class="card" data-animate href="<?= base_url('process-library?dept=' . $d['slug']) ?>"><h2><?= h($d['name']) ?></h2><p><?= (int) $d['n'] ?> process<?= $d['n'] == 1 ? '' : 'es' ?><?= $d['n'] ? '' : ' yet' ?></p></a>
       <?php endforeach ?>
     </div>
   <?php endif ?>

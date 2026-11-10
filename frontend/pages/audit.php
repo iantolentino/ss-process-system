@@ -71,28 +71,30 @@ function entity_link(string $e, ?int $id): string {
 }
 
 $qs = fn(array $over = []) => http_build_query(array_filter(array_merge($_GET, $over), fn($v) => $v !== '' && $v !== 0 && $v !== null));
-$title = 'Audit log';
+$title = 'Activity history';
 require __DIR__ . '/../components/app_open.php';
 ?>
-<h1 class="title" data-animate>Audit log</h1>
-<p class="muted">Every sign-in, upload, new version, edit and archive, with who and when. <?= number_format($total) ?> entries match.</p>
+<div class="page-head"><div>
+  <h1 class="title" data-animate>Activity history</h1>
+  <p class="lead">A record of who did what and when: sign-ins, uploads, new versions, edits and downloads. Entries can never be changed or deleted. <?= number_format($total) ?> entries match your filters.</p>
+</div></div>
 
-<form class="toolbar" method="get" style="margin-top:1rem">
-  <select class="form-input" name="user"><option value="">Anyone</option>
+<form class="toolbar" method="get">
+  <select class="form-input" name="user" aria-label="Person"><option value="">Anyone</option>
     <?php foreach ($users as $u): ?><option value="<?= $u['id'] ?>" <?= $f['user'] == $u['id'] ? 'selected' : '' ?>><?= h($u['n']) ?></option><?php endforeach ?></select>
-  <select class="form-input" name="entity"><option value="">Any record type</option>
+  <select class="form-input" name="entity" aria-label="Type of item"><option value="">Any type of item</option>
     <?php foreach ($entities as $e): ?><option <?= $f['entity'] === $e ? 'selected' : '' ?>><?= h($e) ?></option><?php endforeach ?></select>
-  <select class="form-input" name="action"><option value="">Any action</option>
+  <select class="form-input" name="action" aria-label="What they did"><option value="">Any action</option>
     <?php foreach ($actions as $a): ?><option <?= $f['action'] === $a ? 'selected' : '' ?>><?= h($a) ?></option><?php endforeach ?></select>
-  <input class="form-input" type="number" name="id" min="1" placeholder="Record #" style="max-width:110px" value="<?= $f['id'] ?: '' ?>">
-  <input class="form-input" type="date" name="from" value="<?= h($f['from']) ?>" title="From">
-  <input class="form-input" type="date" name="to" value="<?= h($f['to']) ?>" title="To">
+  <input class="form-input" type="number" name="id" min="1" placeholder="Item number" aria-label="Item number" style="max-width:110px" value="<?= $f['id'] ?: '' ?>">
+  <input class="form-input" type="date" name="from" value="<?= h($f['from']) ?>" title="From" aria-label="From date">
+  <input class="form-input" type="date" name="to" value="<?= h($f['to']) ?>" title="To" aria-label="To date">
   <button class="btn inline" type="submit">Filter</button>
-  <a class="btn ghost inline" style="text-decoration:none" href="<?= base_url('audit?' . $qs(['export' => 'csv', 'p' => ''])) ?>">Export CSV</a>
+  <a class="btn ghost inline" href="<?= base_url('audit?' . $qs(['export' => 'csv', 'p' => ''])) ?>" title="Download these entries as a spreadsheet">Export CSV</a>
 </form>
 
-<div class="table-wrap"><table class="tbl" data-animate>
-  <tr><th>When</th><th>Who</th><th>Action</th><th>Record</th><th>What changed</th></tr>
+<div class="panel table-wrap" style="padding:4px 8px"><table class="tbl" data-animate>
+  <tr><th>When</th><th>Who</th><th>Did what</th><th>Item</th><th>What changed</th></tr>
   <?php foreach ($rows as $r): $ch = changes($r['before_json'], $r['after_json']); ?>
   <tr>
     <td style="white-space:nowrap"><?= h($r['at']) ?></td><td><?= h($r['who'] ?? 'system') ?><div class="muted"><?= h($r['ip']) ?></div></td>
@@ -100,10 +102,10 @@ require __DIR__ . '/../components/app_open.php';
     <td><?= entity_link($r['entity'], $r['entity_id'] ? (int) $r['entity_id'] : null) ?></td>
     <td><?php foreach (array_slice($ch, 0, 4) as $c): ?><div class="muted"><?= h($c) ?></div><?php endforeach ?>
       <?php if (count($ch) > 4): ?><div class="muted">+<?= count($ch) - 4 ?> more</div><?php endif ?>
-      <?php if ($r['before_json'] || $r['after_json']): ?><details><summary class="muted">Full record</summary>
+      <?php if ($r['before_json'] || $r['after_json']): ?><details><summary class="muted">Show details</summary>
         <pre class="json"><?= h(json_encode(['before' => json_decode($r['before_json'] ?? 'null'), 'after' => json_decode($r['after_json'] ?? 'null')], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) ?></pre></details><?php endif ?></td>
   </tr>
-  <?php endforeach; if (!$rows): ?><tr><td colspan="5" class="muted">No entries match.</td></tr><?php endif ?>
+  <?php endforeach; if (!$rows): ?><tr><td colspan="5" class="muted">No entries match these filters.</td></tr><?php endif ?>
 </table></div>
 
 <?php $pages = (int) ceil($total / $per); if ($pages > 1): ?>

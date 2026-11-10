@@ -8,6 +8,7 @@ const IP_MAX_FAILS = 20;   // failed logins per IP within LOCK_MINUTES, across a
 const IDLE_HOURS = 8;      // signed out after this long without a request
 const RESET_PER_HOUR = 3;  // reset emails per account per hour
 const ROLES = ['admin', 'policy_owner', 'process_owner', 'employee'];
+const ROLE_LABELS = ['admin' => 'Admin: everything', 'policy_owner' => 'Policy owner: policies and forms', 'process_owner' => 'Process owner: their department\'s processes', 'employee' => 'Employee: read and suggest changes'];
 
 function session_boot(): void {
     if (session_status() === PHP_SESSION_ACTIVE) return;

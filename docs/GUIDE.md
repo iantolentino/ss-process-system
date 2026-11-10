@@ -33,7 +33,7 @@ Sign in with your work email. Forgot your password? Use **Forgot password** on t
 
 ## Admins
 
-- **Users**: add, edit or disable people; roles are `admin`, `policy_owner`, `process_owner`, `employee`. The last admin cannot be disabled or demoted. Disable instead of delete: history keeps the name.
-- **Audit log**: every login, edit, upload, new version, download and export, with who, when, and before/after values. Filter by user, record, action or date; *Export CSV* (the export is logged too). Audit entries are never deleted.
+- **People & roles**: add, edit or turn off people; roles are `admin`, `policy_owner`, `process_owner`, `employee`. The last admin cannot be disabled or demoted. Disable instead of delete: history keeps the name.
+- **Activity history**: every login, edit, upload, new version, download and export, with who, when, and before/after values. Filter by user, record, action or date; *Export CSV* (the export is logged too). Audit entries are never deleted.
 - **Backups and restore**: see `DEPLOY.md`. Test a restore on a copy now and then (`tests/restore_drill.sh` locally).
 - **Troubleshooting**: "Something went wrong" means check `logs/error-DATE.log`. To see the error on screen temporarily, set `APP_DEBUG=1` in `.env` and set it back to `0` afterwards. Never leave it on in production.
