@@ -1,2 +1,4 @@
 </main>
-<?php require __DIR__ . '/foot.php';
+</div>
+</div>
+<?php require __DIR__ . "/foot.php";

@@ -23,7 +23,17 @@ window.a11y = (root = document) => {
   root.querySelectorAll('.alert').forEach(a => a.setAttribute('role', a.classList.contains('error') ? 'alert' : 'status'));
 };
 a11y();
-// Tell screen readers which menu item is the current page.
-document.querySelectorAll('.topbar nav a').forEach(a => {
-  if (new URL(a.href).pathname === location.pathname) a.setAttribute('aria-current', 'page');
+
+// Mobile menu
+const navbtn = document.getElementById('navbtn');
+navbtn?.addEventListener('click', () => navbtn.setAttribute('aria-expanded', document.body.classList.toggle('nav-open')));
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('nav-open')) { navbtn.click(); navbtn.focus(); } });
+
+// Tabs: <div class="tabs" data-tabs> with buttons [data-tab=name] and panels [data-tabpanel=name]. Without JS every panel simply shows.
+document.querySelectorAll('[data-tabs]').forEach(bar => {
+  const btns = [...bar.querySelectorAll('[data-tab]')], panels = [...document.querySelectorAll('[data-tabpanel]')];
+  const show = name => { btns.forEach(b => b.setAttribute('aria-selected', b.dataset.tab === name)); panels.forEach(p => { p.hidden = p.dataset.tabpanel !== name; }); };
+  btns.forEach(b => b.addEventListener('click', () => { show(b.dataset.tab); history.replaceState(null, '', '#' + b.dataset.tab); }));
+  show(btns.some(b => b.dataset.tab === location.hash.slice(1)) ? location.hash.slice(1) : btns[0].dataset.tab);
+  bar.hidden = false;
 });

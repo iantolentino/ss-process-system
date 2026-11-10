@@ -106,7 +106,7 @@ process/
 - [x] Debug mode switch via `.env` APP_DEBUG (documented in DEPLOY.md)
 
 ## Phase 7 — Frontend polish
-- [ ] Split legacy inline CSS/JS into shared files, design tokens (colours/fonts) for later redesign
+- [x] Shared CSS/JS with design tokens; restyled to a shadcn/ui look (plain CSS, zinc theme) with a left sidebar layout (2026-11-11)
 - [x] GSAP mild: page fade-in, card stagger, panel slide — respect `prefers-reduced-motion`
 - [x] Keyboard accessible (skip link, focus outline, current page marked), print styles; responsive layout exists but is not re-checked on a phone
 - [ ] Empty/error/loading states

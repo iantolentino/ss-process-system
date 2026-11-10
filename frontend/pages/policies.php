@@ -37,13 +37,15 @@ $pgPath = 'policies';
 $pgParams = array_filter(['type' => $type, 'q' => $q, 'category' => $cat, 'archived' => isset($_GET['archived']) ? 1 : '']);
 $cats = db()->query("SELECT DISTINCT category FROM documents WHERE category <> '' ORDER BY category")->fetchAll(PDO::FETCH_COLUMN);
 
-$title = 'Policy Portal';
+$title = 'Policies & forms';
 require __DIR__ . '/../components/app_open.php';
 $qs = fn(string $t) => base_url('policies?type=' . $t);
 ?>
-<h1 class="title" data-animate>Policy Portal</h1>
-<p class="muted">Policies, memos, manuals and forms. Every version is kept.</p>
-<nav class="tabs"><?php foreach (DOC_TYPES as $k => $label): ?>
+<div class="page-head"><div>
+  <h1 class="title" data-animate>Policies &amp; forms</h1>
+  <p class="lead">Company policies, memos, manuals and forms. Open one to read it, download it, or see older versions.</p>
+</div></div>
+<nav class="tabs" aria-label="Document type"><?php foreach (DOC_TYPES as $k => $label): ?>
   <a href="<?= $qs($k) ?>" class="<?= $k === $type ? 'active' : '' ?>"><?= h($label) ?></a><?php endforeach ?></nav>
 
 <form class="toolbar" method="get">
@@ -57,27 +59,31 @@ $qs = fn(string $t) => base_url('policies?type=' . $t);
 
 <?php if ($error): ?><div class="alert error"><?= h($error) ?></div><?php endif ?>
 <?php if ($canEdit): ?>
-<details class="panel" <?= $error ? 'open' : '' ?>>
-  <summary>+ Add a document</summary>
+<details class="panel" <?= $error || isset($_GET['add']) ? 'open' : '' ?>>
+  <summary>Add a document</summary>
   <form method="post" enctype="multipart/form-data">
     <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
     <div class="grid2">
       <div class="form-group"><label class="form-label">Type</label>
-        <select class="form-input" name="type"><?php foreach (DOC_TYPES as $k => $label): ?><option value="<?= $k ?>" <?= $k === $type ? 'selected' : '' ?>><?= h(rtrim($label, 's')) ?></option><?php endforeach ?></select></div>
+        <select class="form-input" name="type"><?php foreach (DOC_TYPES as $k => $label): ?><option value="<?= $k ?>" <?= $k === $type ? 'selected' : '' ?>><?= h(ucfirst($k)) ?></option><?php endforeach ?></select></div>
       <div class="form-group"><label class="form-label">Title</label><input class="form-input" name="title" required value="<?= h($_POST['title'] ?? '') ?>"></div>
       <div class="form-group"><label class="form-label">Category</label><input class="form-input" name="category" list="cats" value="<?= h($_POST['category'] ?? '') ?>">
         <datalist id="cats"><?php foreach ($cats as $c): ?><option value="<?= h($c) ?>"><?php endforeach ?></datalist></div>
-      <div class="form-group"><label class="form-label">Version</label><input class="form-input" name="version_no" required value="<?= h($_POST['version_no'] ?? '1.0') ?>"></div>
-      <div class="form-group"><label class="form-label">Effective date</label><input class="form-input" type="date" name="effective_date" required value="<?= h($_POST['effective_date'] ?? date('Y-m-d')) ?>"></div>
-      <div class="form-group"><label class="form-label">Next review date (optional)</label><input class="form-input" type="date" name="review_due" value="<?= h($_POST['review_due'] ?? '') ?>"></div>
-      <div class="form-group"><label class="form-label">SharePoint link (optional)</label><input class="form-input" name="sharepoint_url" value="<?= h($_POST['sharepoint_url'] ?? '') ?>"></div>
+      <div class="form-group"><label class="form-label">Version</label><input class="form-input" name="version_no" required value="<?= h($_POST['version_no'] ?? '1.0') ?>"><p class="help">Your own numbering, e.g. 1.0 or 2024-03.</p></div>
+      <div class="form-group"><label class="form-label">Starts to apply on</label><input class="form-input" type="date" name="effective_date" required value="<?= h($_POST['effective_date'] ?? date('Y-m-d')) ?>"></div>
       <div class="form-group memo-only" hidden><label class="form-label">Memo from</label><input class="form-input" name="memo_from" value="<?= h($_POST['memo_from'] ?? '') ?>"></div>
       <div class="form-group memo-only" hidden><label class="form-label">Memo is for (audience)</label><input class="form-input" name="audience" placeholder="e.g. All staff, Finance team" value="<?= h($_POST['audience'] ?? '') ?>"></div>
       <div class="form-group memo-only" hidden><label class="form-label">Memo expires (optional)</label><input class="form-input" type="date" name="expires_on" value="<?= h($_POST['expires_on'] ?? '') ?>"></div>
-      <div class="form-group"><label class="form-label">File (<?= h(implode(', ', DOC_EXT)) ?>; max 20 MB)</label><input class="form-input" type="file" name="file" required></div>
+      <div class="form-group"><label class="form-label">File</label><input class="form-input" type="file" name="file" required><p class="help"><?= h(implode(', ', DOC_EXT)) ?> · up to 20 MB</p></div>
     </div>
-    <div class="form-group"><label class="form-label">What is this version? (optional for the first one)</label><input class="form-input" name="changelog" value="<?= h($_POST['changelog'] ?? '') ?>" placeholder="Initial version"></div>
-    <button class="btn inline" type="submit">Upload</button>
+    <details class="step-more" style="margin-bottom:16px"><summary class="muted">More options (review date, SharePoint link, note)</summary>
+      <div class="grid2" style="margin-top:12px">
+        <div class="form-group"><label class="form-label">Check again on</label><input class="form-input" type="date" name="review_due" value="<?= h($_POST['review_due'] ?? '') ?>"><p class="help">Shows on Home when it is due.</p></div>
+        <div class="form-group"><label class="form-label">SharePoint link</label><input class="form-input" name="sharepoint_url" value="<?= h($_POST['sharepoint_url'] ?? '') ?>"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Note about this version</label><input class="form-input" name="changelog" value="<?= h($_POST['changelog'] ?? '') ?>" placeholder="Initial version"></div>
+    </details>
+    <button class="btn inline" type="submit">Upload document</button>
   </form>
   <script>
     // Memo-only fields show when the type is Memo.
@@ -88,7 +94,7 @@ $qs = fn(string $t) => base_url('policies?type=' . $t);
 </details>
 <?php endif ?>
 
-<div class="table-wrap"><table class="tbl" data-animate>
+<div class="panel table-wrap" style="padding:4px 8px"><table class="tbl" data-animate>
   <tr><th>Title</th><th>Category</th><th>Version</th><th>Effective</th><th>Review due</th></tr>
   <?php foreach ($docs as $d): $over = $d['review_due'] && $d['review_due'] < date('Y-m-d'); ?>
   <tr>

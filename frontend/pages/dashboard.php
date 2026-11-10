@@ -5,28 +5,56 @@ $user = require_login();
 $due = db()->query("SELECT id, type, title, review_due, review_due < CURDATE() AS overdue FROM documents
                     WHERE status = 'active' AND review_due IS NOT NULL AND review_due <= CURDATE() + INTERVAL 30 DAY
                     ORDER BY review_due LIMIT 10")->fetchAll();
+$mySlug = '';
+if ($user['department_id']) {
+    $s = db()->prepare('SELECT slug FROM departments WHERE id = ?');
+    $s->execute([$user['department_id']]);
+    $mySlug = (string) $s->fetchColumn();
+}
+$isDocEditor = in_array($user['role'], ['admin', 'policy_owner'], true);
+$isProcEditor = $user['role'] === 'admin' || ($user['role'] === 'process_owner' && $mySlug);
 
-$title = 'Dashboard';
+$title = 'Home';
 require __DIR__ . '/../components/app_open.php';
+$card = fn(string $href, string $ico, string $head, string $text) =>
+    '<a class="card" data-animate href="' . h(base_url($href)) . '"><span class="ico">' . icon($ico) . '</span><h2>' . h($head) . '</h2><p>' . h($text) . '</p></a>';
 ?>
-<h1 class="title" data-animate>Welcome, <?= h($user['first_name']) ?></h1>
+<div class="page-head"><div>
+  <h1 class="title" data-animate>Welcome, <?= h($user['first_name']) ?></h1>
+  <p class="lead">Not sure where to start? Pick what you want to do below.</p>
+</div></div>
+
+<p class="section-title">What do you want to do?</p>
 <div class="cards">
-  <a class="card" data-animate href="<?= base_url('process-library') ?>"><h2>Process Library</h2><p>How each department works: steps, people, flowcharts.</p></a>
   <?php if ($user['department_id']): ?>
-  <a class="card" data-animate href="<?= base_url('onboarding') ?>"><h2>My onboarding checklist</h2><p>What to do in your first weeks, with links to the processes and policies.</p></a>
-  <a class="card" data-animate href="<?= base_url('handbook') ?>"><h2>New here? Start here</h2><p>Your department's handbook: who's who and every process, step by step.</p></a>
+  <?= $card('handbook', 'book', 'New here? Start here', 'Your department in one page: who is who and every process, step by step.') ?>
+  <?= $card('onboarding', 'check', 'My checklist', 'What to do in your first weeks, with links to what you need to read.') ?>
   <?php endif ?>
-  <a class="card" data-animate href="<?= base_url('policies') ?>"><h2>Policy Portal</h2><p>Policies, memos, manuals and forms with version history.</p></a>
+  <?= $card('process-library', 'flow', 'Learn how a job is done', 'Step-by-step guides with a flowchart and who does each step.') ?>
+  <?= $card('policies', 'file', 'Find a policy, form or memo', 'Search the company documents. Every version is kept.') ?>
+  <?= $card('glossary', 'tag', 'Look up a word', 'Company terms and acronyms explained.') ?>
 </div>
-<?php if ($due): ?>
-<div class="panel" data-animate>
-  <h2>Reviews due</h2>
-  <table class="tbl">
-    <?php foreach ($due as $d): ?>
-    <tr><td><a href="<?= base_url('document?id=' . $d['id']) ?>"><?= h($d['title']) ?></a></td><td><?= h($d['type']) ?></td>
-      <td><span class="badge <?= $d['overdue'] ? 'warn' : '' ?>"><?= $d['overdue'] ? 'overdue ' : 'due ' ?><?= h($d['review_due']) ?></span></td></tr>
-    <?php endforeach ?>
-  </table>
+
+<?php if ($isDocEditor || $isProcEditor): ?>
+<p class="section-title">Your tasks as <?= h(str_replace('_', ' ', $user['role'])) ?></p>
+<div class="cards">
+  <?php if ($isDocEditor): ?><?= $card('policies?add=1', 'plus', 'Upload a policy or form', 'Add a new document, or open one to upload a new version.') ?><?php endif ?>
+  <?php if ($isProcEditor): ?><?= $card($mySlug ? 'process-edit?dept=' . $mySlug : 'process-library', 'plus', $mySlug ? 'Add a process' : 'Add or update a process', $mySlug ? 'Write down how a job is done in your department.' : 'Pick a department, then add or edit its processes.') ?><?php endif ?>
+  <?php if ($user['role'] === 'admin'): ?><?= $card('users?new=1', 'users', 'Add a person', 'Create an account and choose what they can do.') ?><?php endif ?>
 </div>
 <?php endif ?>
+
+<div class="panel" data-animate>
+  <h2>Documents to review</h2>
+  <?php if ($due): ?>
+  <p class="help" style="margin:-6px 0 10px">Each company document has a date when someone should check it is still right.</p>
+  <div class="table-wrap"><table class="tbl">
+    <?php foreach ($due as $d): ?>
+    <tr><td><a href="<?= base_url('document?id=' . $d['id']) ?>"><?= h($d['title']) ?></a></td><td><?= h(ucfirst($d['type'])) ?></td>
+      <td><span class="badge <?= $d['overdue'] ? 'warn' : 'off' ?>"><?= $d['overdue'] ? 'Overdue since ' : 'Due ' ?><?= h($d['review_due']) ?></span></td></tr>
+    <?php endforeach ?>
+  </table></div>
+  <?php else: ?><p class="muted">Nothing needs review in the next 30 days.</p><?php endif ?>
+</div>
+<p class="muted">Need a walkthrough? <a href="<?= base_url('help') ?>">How to use this site</a>.</p>
 <?php require __DIR__ . '/../components/app_close.php';
