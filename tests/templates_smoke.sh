@@ -56,4 +56,11 @@ check "versions are kept (still 1)" "$($M "SELECT COUNT(*) FROM process_versions
 post "$T/admin" "process-edit?dept=information-technology" -d "dept=information-technology" -d "name=Tpl $S" -d "purpose=reusable" -d "cadence=monthly" -d "kind=template" -d "status=active" -d "steps[0][title]=one" >/dev/null
 check "saved as template" "$($M "SELECT kind FROM processes WHERE name='Tpl $S'" | tr -d '\r')" template
 check "new template appears in the gallery" "$(curl -s -b "$T/admin" "$B/process-edit?dept=information-technology" | grep -c "Tpl $S")" 1
+# --- company overview (all departments)
+OV=$(curl -s -b "$T/em" "$B/overview")
+check "overview lists the new process" "$(echo "$OV" | grep -c "Backups $S")" 1
+check "overview matrix has a daily column" "$(echo "$OV" | grep -c "overview?c=daily")" 2
+check "cadence filter keeps only that cadence" "$(curl -s -b "$T/em" "$B/overview?c=weekly" | grep -c "Backups $S")" 0
+check "templates are not in the overview" "$(echo "$OV" | grep -c "Weekly routine")" 0
+check "overview needs login" "$(curl -s -o /dev/null -w '%{http_code}' "$B/overview")" 302
 rm -rf "$T"; exit $fail

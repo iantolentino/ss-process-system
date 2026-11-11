@@ -12,6 +12,7 @@ $r = $user['role'];
 <div class="panel" data-animate>
   <h2>The three places you will use</h2>
   <ul class="plain">
+    <li><strong><a href="<?= base_url('overview') ?>">Company overview</a></strong>: every department side by side, by how often things happen (daily, weekly, monthly). Best for a quick picture.</li>
     <li><strong><a href="<?= base_url('process-library') ?>">Processes</a></strong>: pick your department, then a job. You see a flowchart, who does each step, which tools they use and what comes out.</li>
     <li><strong><a href="<?= base_url('policies') ?>">Policies &amp; forms</a></strong>: policies, memos, manuals and forms. Open one to read, download or see older versions.</li>
     <li><strong><a href="<?= base_url('glossary') ?>">Glossary</a></strong>: what an acronym or company word means.</li>

@@ -13,6 +13,7 @@ $icons = [
     'help' => '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7"/><path d="M12 17h.01"/>',
     'users' => '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/>',
     'clock' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    'grid' => '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
     'plus' => '<path d="M12 5v14M5 12h14"/>',
 ];
 function icon(string $name): string { global $icons; return '<svg viewBox="0 0 24 24" aria-hidden="true">' . ($icons[$name] ?? '') . '</svg>'; }
@@ -22,7 +23,7 @@ $nav = [['Start', array_filter([
         ['dashboard', 'Home', 'home'],
         $user['department_id'] ? ['handbook', 'Start here (new hires)', 'book'] : null,
         $user['department_id'] ? ['onboarding', 'My checklist', 'check'] : null])],
-    ['Library', [['process-library', 'Processes', 'flow'], ['policies', 'Policies & forms', 'file'], ['glossary', 'Glossary', 'tag'], ['help', 'How to use this site', 'help']]]];
+    ['Library', [['overview', 'Company overview', 'grid'], ['process-library', 'Processes', 'flow'], ['policies', 'Policies & forms', 'file'], ['glossary', 'Glossary', 'tag'], ['help', 'How to use this site', 'help']]]];
 if ($user['role'] === 'admin') $nav[] = ['Admin', [['users', 'People & roles', 'users'], ['audit', 'Activity history', 'clock']]];
 ?>
 <a class="skip" href="#main">Skip to content</a>

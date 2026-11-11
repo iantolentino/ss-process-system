@@ -30,6 +30,7 @@ $card = fn(string $href, string $ico, string $head, string $text) =>
   <?= $card('handbook', 'book', 'New here? Start here', 'Your department in one page: who is who and every process, step by step.') ?>
   <?= $card('onboarding', 'check', 'My checklist', 'What to do in your first weeks, with links to what you need to read.') ?>
   <?php endif ?>
+  <?= $card('overview', 'grid', 'See how every department works', 'All departments side by side: daily, weekly and monthly processes.') ?>
   <?= $card('process-library', 'flow', 'Learn how a job is done', 'Step-by-step guides with a flowchart and who does each step.') ?>
   <?= $card('policies', 'file', 'Find a policy, form or memo', 'Search the company documents. Every version is kept.') ?>
   <?= $card('glossary', 'tag', 'Look up a word', 'Company terms and acronyms explained.') ?>

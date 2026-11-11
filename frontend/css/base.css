@@ -213,3 +213,9 @@ a.card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.06); }
 dl.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px 24px; }
 dl.facts dt { font-size: 12px; font-weight: 500; color: var(--muted-foreground); margin-bottom: 2px; }
 dl.facts dd { font-size: 14px; }
+
+/* ---- Company overview matrix ---- */
+.matrix th:not(:first-child), .matrix td:not(:first-child) { text-align: center; }
+.matrix .count { display: inline-block; min-width: 26px; padding: 1px 8px; border-radius: 99px; background: var(--muted); font-weight: 500; }
+.matrix tr.total td { border-top: 1px solid var(--border); font-weight: 500; }
+.tabs a .muted { font-size: 12px; margin-left: 2px; }
