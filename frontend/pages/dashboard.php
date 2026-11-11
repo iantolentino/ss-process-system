@@ -44,6 +44,7 @@ $card = fn(string $href, string $ico, string $head, string $text) =>
 </div>
 <?php endif ?>
 
+<?php if ($isDocEditor): ?>
 <div class="panel" data-animate>
   <h2>Documents to review</h2>
   <?php if ($due): ?>
@@ -56,5 +57,6 @@ $card = fn(string $href, string $ico, string $head, string $text) =>
   </table></div>
   <?php else: ?><p class="muted">Nothing needs review in the next 30 days.</p><?php endif ?>
 </div>
+<?php endif ?>
 <p class="muted">Need a walkthrough? <a href="<?= base_url('help') ?>">How to use this site</a>.</p>
 <?php require __DIR__ . '/../components/app_close.php';

@@ -17,6 +17,7 @@ $check('extensions pdo_mysql, mbstring, json, phar', !array_diff(['pdo_mysql', '
 $check('APP_ENV=production', $prod, 'set in .env (local only logs mail instead of sending it)');
 $check('APP_DEBUG=0', env('APP_DEBUG') !== '1', 'set APP_DEBUG=0 in .env');
 $check('APP_URL is https', str_starts_with(env('APP_URL'), 'https://'), 'set APP_URL="https://your-domain" in .env (reset links are built from it)');
+$check('SMTP_PORT matches SMTP_SECURE (587 tls, 465 ssl)', env('SMTP_HOST') === '' || (env('SMTP_SECURE', 'tls') === 'ssl' ? env('SMTP_PORT', '587') === '465' : env('SMTP_SECURE', 'tls') !== 'tls' || env('SMTP_PORT', '587') === '587'), 'use 587 with tls or 465 with ssl, unless your host says otherwise');
 $check('MAIL_FROM set', env('MAIL_FROM') !== '', 'set MAIL_FROM="Name <no-reply@your-domain>" so mail is not rejected as spam');
 $check('upload_max_filesize >= 25M', $bytes(ini_get('upload_max_filesize')) >= 25 << 20, 'MultiPHP INI Editor (now ' . ini_get('upload_max_filesize') . ')');
 $check('post_max_size >= 30M', $bytes(ini_get('post_max_size')) >= 30 << 20, 'MultiPHP INI Editor (now ' . ini_get('post_max_size') . ')');

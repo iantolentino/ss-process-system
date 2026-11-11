@@ -41,15 +41,51 @@ function app_url(string $path = ''): string {
 }
 
 // Sends a plain-text email. Local dev has no mail server, so it goes to the app log instead.
-// shortcut: PHP mail() on cPanel, no queue/retry; a failure is logged, never shown to the user.
+// With SMTP_HOST set in .env it goes through that SMTP account, otherwise PHP mail().
+// shortcut: no queue or retry; a failure is logged, never shown to the user.
 function notify(string $to, string $subject, string $body): void {
-    $to = str_replace(["", "
-"], '', $to);   // no header injection through names in subjects
-    $subject = str_replace(["", "
-"], ' ', $subject);
+    $to = preg_replace('/[\r\n]+/', '', $to);          // no header injection through names in subjects
+    $subject = preg_replace('/[\r\n]+/', ' ', $subject);
     if (env('APP_ENV') === 'local') { log_line('app', 'DEV', "mail to $to: $subject", ['body' => $body]); return; }
     $from = env('MAIL_FROM');
-    if (!@mail($to, $subject, $body, $from ? "From: $from" : '')) log_line('error', 'WARN', "mail to $to failed: $subject");
+    $ok = env('SMTP_HOST') !== '' ? smtp_send($to, $subject, $body) : @mail($to, $subject, $body, $from ? "From: $from" : '');
+    if (!$ok) log_line('error', 'WARN', "mail to $to failed: $subject");
+}
+
+// Minimal SMTP client: SMTP_SECURE=tls (STARTTLS, port 587, default) | ssl (port 465) | none; AUTH LOGIN when SMTP_USER is set.
+function smtp_send(string $to, string $subject, string $body): bool {
+    $host = env('SMTP_HOST'); $port = (int) env('SMTP_PORT', '587'); $secure = env('SMTP_SECURE', 'tls');
+    $from = env('MAIL_FROM') ?: env('SMTP_USER');
+    $addr = preg_match('/<([^>]+)>/', $from, $m) ? $m[1] : $from;
+    $fp = @stream_socket_client(($secure === 'ssl' ? 'ssl://' : 'tcp://') . "$host:$port", $errno, $err, 15);
+    if (!$fp) { log_line('error', 'WARN', "smtp connect failed: $err"); return false; }
+    stream_set_timeout($fp, 15);
+    $reply = function () use ($fp): string {
+        $r = '';
+        while (($l = fgets($fp, 515)) !== false) { $r .= $l; if (($l[3] ?? ' ') === ' ') break; }
+        return $r;
+    };
+    $say = function (string $cmd, string $want) use ($fp, $reply): bool {
+        if ($cmd !== '') fwrite($fp, "$cmd\r\n");
+        $r = $reply();
+        if (!str_starts_with($r, $want)) { log_line('error', 'WARN', 'smtp unexpected reply', ['expected' => $want, 'got' => trim($r)]); return false; }
+        return true;
+    };
+    $me = parse_url(env('APP_URL'), PHP_URL_HOST) ?: 'localhost';
+    $ok = $say('', '220') && $say("EHLO $me", '250');
+    if ($ok && $secure === 'tls') $ok = $say('STARTTLS', '220') && stream_socket_enable_crypto($fp, true, STREAM_CRYPTO_METHOD_TLS_CLIENT) && $say("EHLO $me", '250');
+    if ($ok && env('SMTP_USER') !== '') $ok = $say('AUTH LOGIN', '334') && $say(base64_encode(env('SMTP_USER')), '334') && $say(base64_encode(env('SMTP_PASS')), '235');
+    $ok = $ok && $say("MAIL FROM:<$addr>", '250') && $say("RCPT TO:<$to>", '25') && $say('DATA', '354');
+    if ($ok) {
+        $msg = "From: " . ($from ?: $addr) . "\r\nTo: $to\r\nSubject: =?UTF-8?B?" . base64_encode($subject) . "?=\r\nDate: " . date('r')
+            . "\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n"
+            . preg_replace('/^\./m', '..', preg_replace('/\r\n|\r|\n/', "\r\n", $body));
+        fwrite($fp, "$msg\r\n.\r\n");
+        $ok = str_starts_with($reply(), '250');
+    }
+    @fwrite($fp, "QUIT\r\n");
+    fclose($fp);
+    return $ok;
 }
 
 function h($s): string {

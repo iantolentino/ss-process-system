@@ -26,7 +26,7 @@ if ($dept && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $vis = $user['role'] === 'admin' ? "'active','draft'" : "'active'";   // drafts are for editors; keep simple: admin sees drafts everywhere
 $q = trim($_GET['q'] ?? '');
-$title = $dept ? $dept['name'] : 'Process Library';
+$title = $dept ? $dept['name'] : 'Processes';
 require __DIR__ . '/../components/app_open.php';
 
 $cols = 'p.id, p.name, p.purpose, p.owner_position, p.status, p.last_reviewed_at, v.version_no, JSON_LENGTH(v.snapshot, "$.steps") AS steps, d.name AS dept, d.slug';

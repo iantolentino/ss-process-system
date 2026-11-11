@@ -69,11 +69,12 @@ require __DIR__ . '/../components/app_open.php';
   <?php if ($snap['trigger']): ?><p class="muted">Starts when: <?= h($snap['trigger']) ?></p><?php endif ?>
   <div class="panel"><?php require __DIR__ . '/../components/flowchart.php'; ?></div>
   <table class="tbl">
-    <tr><th>#</th><th>Step</th><th>Who</th><th>What they do</th><th>Tools</th><th>Result</th></tr>
+    <?php $hasWho = (bool) array_filter($steps, fn($x) => $x['role'] . $x['person'] !== ''); $hasTools = (bool) array_filter($steps, fn($x) => $x['tools'] !== ''); $hasOut = (bool) array_filter($steps, fn($x) => $x['output'] !== ''); ?>
+    <tr><th>#</th><th>Step</th><?php if ($hasWho): ?><th>Who</th><?php endif ?><th>What they do</th><?php if ($hasTools): ?><th>Tools</th><?php endif ?><?php if ($hasOut): ?><th>Result</th><?php endif ?></tr>
     <?php foreach ($steps as $i => $st): ?>
     <tr><td><?= $i + 1 ?></td><td><strong><?= h($st['title']) ?></strong><?= $st['decision'] ? ' <span class="badge off">decision</span>' : '' ?></td>
-      <td><?= h(trim($st['role'] . ($st['person'] ? ' — ' . $st['person'] : '')) ?: '—') ?></td>
-      <td><?= nl2br(h($st['detail'])) ?></td><td><?= h($st['tools'] ?: '—') ?></td><td><?= h($st['output'] ?: '—') ?></td></tr>
+      <?php if ($hasWho): ?><td><?= h(trim($st['role'] . ($st['person'] ? ' — ' . $st['person'] : '')) ?: '—') ?></td><?php endif ?>
+      <td><?= nl2br(h($st['detail'])) ?></td><?php if ($hasTools): ?><td><?= h($st['tools'] ?: '—') ?></td><?php endif ?><?php if ($hasOut): ?><td><?= h($st['output'] ?: '—') ?></td><?php endif ?></tr>
     <?php endforeach ?>
   </table>
   <?php if ($snap['notes']): ?><p style="margin-top:.8rem"><strong>Tips:</strong> <?= nl2br(h($snap['notes'])) ?></p><?php endif ?>

@@ -15,7 +15,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(?)` needs owner answe
 10. [x] Email/password + reset by SMTP email; SSO later
 11. (?) Real employee data: migrate users from `employees.db`? (Never push it to GitHub.)
 12. [x] Public repo, code only
-13. (?) Domain / cPanel subfolder path for deployment (affects base URL/routes).
+13. [x] Domain: owner will use a different domain than stratastaff.com (set `APP_URL`; nothing is hard-coded)
 14. (?) Brand: keep legacy fonts/colours for now, redesign later — confirm.
 
 ## Phase 0 — Setup

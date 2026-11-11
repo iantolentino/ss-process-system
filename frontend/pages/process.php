@@ -110,11 +110,12 @@ $openReqs = count(array_filter($requests, fn($r) => $r['status'] === 'open'));
 <section data-tabpanel="steps"><div class="panel" data-animate>
   <h2>Step by step</h2>
   <div class="table-wrap"><table class="tbl">
-    <tr><th>#</th><th>Step</th><th>Who</th><th>What they do</th><th>Tools</th><th>Result</th></tr>
+    <?php $hasWho = (bool) array_filter($steps, fn($x) => $x['role'] . $x['person'] !== ''); $hasTools = (bool) array_filter($steps, fn($x) => $x['tools'] !== ''); $hasOut = (bool) array_filter($steps, fn($x) => $x['output'] !== ''); ?>
+    <tr><th>#</th><th>Step</th><?php if ($hasWho): ?><th>Who</th><?php endif ?><th>What they do</th><?php if ($hasTools): ?><th>Tools</th><?php endif ?><?php if ($hasOut): ?><th>Result</th><?php endif ?></tr>
     <?php foreach ($steps as $i => $st): ?>
     <tr><td><?= $i + 1 ?></td><td><strong><?= h($st['title']) ?></strong><?= $st['decision'] ? ' <span class="badge off">decision</span>' : '' ?></td>
-      <td><?= h(trim($st['role'] . ($st['person'] ? ' — ' . $st['person'] : '')) ?: '—') ?></td>
-      <td><?= nl2br(h($st['detail'])) ?></td><td><?= h($st['tools'] ?: '—') ?></td><td><?= h($st['output'] ?: '—') ?></td></tr>
+      <?php if ($hasWho): ?><td><?= h(trim($st['role'] . ($st['person'] ? ' — ' . $st['person'] : '')) ?: '—') ?></td><?php endif ?>
+      <td><?= nl2br(h($st['detail'])) ?></td><?php if ($hasTools): ?><td><?= h($st['tools'] ?: '—') ?></td><?php endif ?><?php if ($hasOut): ?><td><?= h($st['output'] ?: '—') ?></td><?php endif ?></tr>
     <?php endforeach ?>
   </table></div>
 </div></section>
