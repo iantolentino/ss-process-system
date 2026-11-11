@@ -15,9 +15,9 @@ $s = db()->prepare('SELECT * FROM departments WHERE slug = ?');
 $s->execute([$slug]);
 if (!($dept = $s->fetch())) { http_response_code(404); exit('Department not found.'); }
 
-$ps = db()->prepare("SELECT p.id, p.name, p.purpose, p.owner_position, p.last_reviewed_at, v.version_no, v.snapshot
+$ps = db()->prepare("SELECT p.id, p.name, p.purpose, p.owner_position, p.cadence, p.last_reviewed_at, v.version_no, v.snapshot
                      FROM processes p JOIN process_versions v ON v.id = p.current_version_id
-                     WHERE p.department_id = ? AND p.status = 'active' ORDER BY p.name");
+                     WHERE p.department_id = ? AND p.status = 'active' AND p.kind = 'process' ORDER BY FIELD(p.cadence, 'daily','weekly','monthly','quarterly','yearly','as_needed'), p.name");
 $ps->execute([$dept['id']]);
 $procs = $ps->fetchAll();
 
@@ -58,8 +58,9 @@ require __DIR__ . '/../components/app_open.php';
     $steps = $snap['steps'];
     $related = related_documents($snap['docs'] ?? []);
 ?>
+<?php if ($p['cadence'] !== ($lastCad ?? null)): $lastCad = $p['cadence']; ?><h2 class="section-title" style="font-size:15px;color:var(--foreground)"><?= h(CADENCE[$p['cadence']]) ?> processes</h2><?php endif ?>
 <section class="proc-block" id="p<?= $p['id'] ?>">
-  <h2 class="title" style="font-size:1.6rem"><?= h($p['name']) ?></h2>
+  <h2 class="title" style="font-size:1.6rem"><?= h($p['name']) ?> <span class="badge off"><?= h(CADENCE[$p['cadence']]) ?></span></h2>
   <p><?= nl2br(h($p['purpose'])) ?></p>
   <p class="muted">
     <?php if ($p['owner_position']): ?>Owner: <strong><?= h($p['owner_position']) ?></strong> · <?php endif ?>
@@ -67,6 +68,8 @@ require __DIR__ . '/../components/app_open.php';
     <?php if ($snap['duration']): ?>Takes: <?= h($snap['duration']) ?> · <?php endif ?>
     Version <?= (int) $p['version_no'] ?> · Last checked: <?= h($p['last_reviewed_at'] ?? 'never') ?></p>
   <?php if ($snap['trigger']): ?><p class="muted">Starts when: <?= h($snap['trigger']) ?></p><?php endif ?>
+  <?php $facts = ['Needed before starting' => $snap['inputs'] ?? '', 'How we know it went well' => $snap['kpi'] ?? '', 'What can go wrong' => $snap['exceptions'] ?? '', 'Who to ask when stuck' => $snap['escalation'] ?? '']; if (array_filter($facts)): ?>
+  <dl class="facts" style="margin:12px 0"><?php foreach ($facts as $k => $v): if ($v === '') continue; ?><div><dt><?= h($k) ?></dt><dd><?= nl2br(h($v)) ?></dd></div><?php endforeach ?></dl><?php endif ?>
   <div class="panel"><?php require __DIR__ . '/../components/flowchart.php'; ?></div>
   <table class="tbl">
     <?php $hasWho = (bool) array_filter($steps, fn($x) => $x['role'] . $x['person'] !== ''); $hasTools = (bool) array_filter($steps, fn($x) => $x['tools'] !== ''); $hasOut = (bool) array_filter($steps, fn($x) => $x['output'] !== ''); ?>

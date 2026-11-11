@@ -5,6 +5,7 @@ require_once __DIR__ . '/../bootstrap.php';
 
 const PROC_STATUS = ['draft', 'active', 'archived'];
 const MAX_STEPS = 60;
+const CADENCE = ['daily' => 'Daily', 'weekly' => 'Weekly', 'monthly' => 'Monthly', 'quarterly' => 'Quarterly', 'yearly' => 'Yearly', 'as_needed' => 'As needed'];
 
 function can_edit_process(array $user, int $deptId): bool {
     return $user['role'] === 'admin' || ($user['role'] === 'process_owner' && (int) $user['department_id'] === $deptId);
@@ -27,6 +28,7 @@ function build_snapshot(array $in): array {
             'person' => text($s, 'person', 160),
             'tools' => text($s, 'tools', 300),
             'output' => text($s, 'output', 300),
+            'time' => text($s, 'time', 80),
             'decision' => $decision,
             // For decisions: step number to jump to when the answer is "No" (blank = process ends).
             'no_goto' => $decision ? (int) ($s['no_goto'] ?? 0) : 0,
@@ -44,6 +46,11 @@ function build_snapshot(array $in): array {
         'duration' => text($in, 'duration', 80),
         'frequency' => text($in, 'frequency', 80),
         'notes' => text($in, 'notes'),
+        // The detailed template fields executives read first.
+        'inputs' => text($in, 'inputs'),
+        'kpi' => text($in, 'kpi'),
+        'exceptions' => text($in, 'exceptions'),
+        'escalation' => text($in, 'escalation'),
         // Policies / forms this process relies on (document ids). Shown as links; missing or archived ones are skipped on display.
         'docs' => array_slice(array_values(array_unique(array_filter(array_map('intval', (array) ($in['docs'] ?? []))))), 0, 30),
         'steps' => $steps,
@@ -58,12 +65,15 @@ function save_process(array $user, ?int $id, int $deptId, array $in): int {
     $changelog = text($in, 'changelog');
     if ($name === '' || $purpose === '') throw new UserError('Name and purpose are required.');
     if (!in_array($status, PROC_STATUS, true)) throw new UserError('Pick a status.');
+    $cadence = ($in['cadence'] ?? '') === '' ? 'as_needed' : (string) $in['cadence'];
+    if (!isset(CADENCE[$cadence])) throw new UserError('Pick how often it happens.');
+    $kind = ($in['kind'] ?? 'process') === 'template' ? 'template' : 'process';
     $snap = build_snapshot($in);
 
     $pdo = db();
     $before = null;
     if ($id !== null) {
-        $s = $pdo->prepare('SELECT p.name, p.purpose, p.owner_position, p.status, v.version_no, v.snapshot
+        $s = $pdo->prepare('SELECT p.name, p.purpose, p.owner_position, p.status, p.cadence, p.kind, v.version_no, v.snapshot
                             FROM processes p LEFT JOIN process_versions v ON v.id = p.current_version_id WHERE p.id = ?');
         $s->execute([$id]);
         if (!($before = $s->fetch())) throw new UserError('Process not found.');
@@ -76,13 +86,13 @@ function save_process(array $user, ?int $id, int $deptId, array $in): int {
     $pdo->beginTransaction();
     try {
         if ($id === null) {
-            $pdo->prepare('INSERT INTO processes (department_id, name, purpose, owner_position, status) VALUES (?,?,?,?,?)')
-                ->execute([$deptId, $name, $purpose, text($in, 'owner_position', 160), $status]);
+            $pdo->prepare('INSERT INTO processes (department_id, name, purpose, owner_position, status, cadence, kind) VALUES (?,?,?,?,?,?,?)')
+                ->execute([$deptId, $name, $purpose, text($in, 'owner_position', 160), $status, $cadence, $kind]);
             $id = (int) $pdo->lastInsertId();
             $no = 1;
         } else {
-            $pdo->prepare('UPDATE processes SET name=?, purpose=?, owner_position=?, status=? WHERE id=?')
-                ->execute([$name, $purpose, text($in, 'owner_position', 160), $status, $id]);
+            $pdo->prepare('UPDATE processes SET name=?, purpose=?, owner_position=?, status=?, cadence=?, kind=? WHERE id=?')
+                ->execute([$name, $purpose, text($in, 'owner_position', 160), $status, $cadence, $kind, $id]);
             $no = (int) $pdo->query("SELECT COALESCE(MAX(version_no),0)+1 FROM process_versions WHERE process_id = $id")->fetchColumn();
         }
         $pdo->prepare('INSERT INTO process_versions (process_id, version_no, snapshot, changelog, created_by) VALUES (?,?,?,?,?)')
@@ -94,7 +104,7 @@ function save_process(array $user, ?int $id, int $deptId, array $in): int {
         throw $e;
     }
     audit((int) $user['id'], $before ? 'new_version' : 'create', 'process', $id, $before,
-        ['name' => $name, 'status' => $status, 'version_no' => $no, 'changelog' => $changelog, 'snapshot' => $snap]);
+        ['name' => $name, 'status' => $status, 'cadence' => $cadence, 'kind' => $kind, 'version_no' => $no, 'changelog' => $changelog, 'snapshot' => $snap]);
     return $id;
 }
 
@@ -106,6 +116,17 @@ function related_documents(array $ids): array {
     $s = db()->prepare("SELECT id, type, title FROM documents WHERE status = 'active' AND id IN ($in) ORDER BY type, title");
     $s->execute($ids);
     return $s->fetchAll();
+}
+
+// "Remove" = archive (hidden from staff, kept with all versions, can be restored). Nothing is ever hard-deleted.
+function set_process_status(array $user, int $id, string $status): void {
+    if (!in_array($status, ['active', 'archived'], true)) throw new UserError('Invalid status.');
+    $s = db()->prepare('SELECT status FROM processes WHERE id = ?');
+    $s->execute([$id]);
+    $old = $s->fetchColumn();
+    if ($old === false) throw new UserError('Process not found.');
+    db()->prepare('UPDATE processes SET status = ? WHERE id = ?')->execute([$status, $id]);
+    audit((int) $user['id'], $status === 'archived' ? 'archive' : 'restore', 'process', $id, ['status' => $old], ['status' => $status]);
 }
 
 function mark_reviewed(array $user, int $id): void {
@@ -167,7 +188,7 @@ function resolve_change_request(array $user, int $id, string $status): void {
 // shortcut: steps are matched by title, so two steps with the same title are compared as one.
 function diff_snapshots(array $old, array $new): array {
     $out = [];
-    foreach (['trigger' => 'Starts when', 'frequency' => 'How often', 'duration' => 'How long', 'notes' => 'Notes for new hires'] as $k => $label) {
+    foreach (['trigger' => 'Starts when', 'frequency' => 'How often', 'duration' => 'How long', 'notes' => 'Tips for new hires', 'inputs' => 'What is needed to start', 'kpi' => 'How success is measured', 'exceptions' => 'What can go wrong', 'escalation' => 'Who to ask when stuck'] as $k => $label) {
         if (($old[$k] ?? '') !== ($new[$k] ?? '')) $out[] = "~ $label changed";
     }
     $a = $old['docs'] ?? []; $b = $new['docs'] ?? [];
@@ -178,7 +199,7 @@ function diff_snapshots(array $old, array $new): array {
     $n = array_column($new['steps'], null, 'title');
     foreach ($n as $t => $s) if (!isset($o[$t])) $out[] = "+ Added step: $t";
     foreach ($o as $t => $s) if (!isset($n[$t])) $out[] = "- Removed step: $t";
-    $labels = ['detail' => 'what they do', 'role' => 'who', 'person' => 'person', 'tools' => 'tools', 'output' => 'output', 'decision' => 'decision', 'no_goto' => '"No" target'];
+    $labels = ['detail' => 'what they do', 'role' => 'who', 'person' => 'person', 'tools' => 'tools', 'output' => 'output', 'time' => 'time', 'decision' => 'decision', 'no_goto' => '"No" target'];
     foreach ($n as $t => $s) {
         if (!isset($o[$t])) continue;
         $f = array_keys(array_filter($labels, fn($k) => ($o[$t][$k] ?? null) !== ($s[$k] ?? null), ARRAY_FILTER_USE_KEY));

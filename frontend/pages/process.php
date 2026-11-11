@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $act = $_POST['action'] ?? '';
         if ($act === 'request') { add_change_request($user, $id, $_POST); flash('Change request sent to the process owner.'); }
         elseif ($canEdit && $act === 'review') { mark_reviewed($user, $id); flash('Marked as reviewed today.'); }
+        elseif ($canEdit && in_array($act, ['archive', 'restore'], true)) { set_process_status($user, $id, $act === 'archive' ? 'archived' : 'active'); flash($act === 'archive' ? 'Removed from the library. It is kept and can be restored.' : 'Restored.'); }
         elseif ($canEdit && $act === 'resolve') { resolve_change_request($user, (int) $_POST['request_id'], $_POST['status'] ?? ''); flash('Request updated.'); }
         else { http_response_code(403); exit('You do not have access to this action.'); }
         redirect("process?id=$id");
@@ -67,13 +68,14 @@ $openReqs = count(array_filter($requests, fn($r) => $r['status'] === 'open'));
 <p class="crumbs noprint"><a href="<?= base_url('process-library') ?>">Processes</a> / <a href="<?= base_url('process-library?dept=' . $proc['slug']) ?>"><?= h($proc['dept']) ?></a></p>
 <div class="page-head"><div>
   <h1 class="title" data-animate><?= h($proc['name']) ?>
-    <span class="badge <?= $proc['status'] === 'active' ? '' : 'off' ?>"><?= h($proc['status']) ?></span></h1>
+    <span class="badge <?= $proc['status'] === 'active' ? '' : 'off' ?>"><?= h($proc['status']) ?></span><?= $proc['kind'] === 'template' ? ' <span class="badge off">template</span>' : '' ?></h1>
   <p class="lead"><?= nl2br(h($proc['purpose'])) ?></p>
   <div class="chips">
     <?php if ($proc['owner_position']): ?><span class="chip">Owner: <b><?= h($proc['owner_position']) ?></b></span><?php endif ?>
     <?php if ($snap['frequency']): ?><span class="chip">Happens: <b><?= h($snap['frequency']) ?></b></span><?php endif ?>
     <?php if ($snap['duration']): ?><span class="chip">Takes: <b><?= h($snap['duration']) ?></b></span><?php endif ?>
     <?php if ($snap['trigger']): ?><span class="chip">Starts when: <b><?= h($snap['trigger']) ?></b></span><?php endif ?>
+    <span class="chip"><?= h(CADENCE[$proc['cadence']] ?? 'As needed') ?></span>
     <span class="chip">Version <b><?= (int) $ver['version_no'] ?></b></span>
     <span class="chip">Last checked: <b><?= h($proc['last_reviewed_at'] ?? 'never') ?></b></span>
   </div>
@@ -82,6 +84,10 @@ $openReqs = count(array_filter($requests, fn($r) => $r['status'] === 'open'));
   <?php if ($canEdit && !$isOld): ?><a class="btn inline" href="<?= base_url('process-edit?id=' . $id) ?>">Edit this process</a>
     <form method="post"><input type="hidden" name="csrf" value="<?= csrf_token() ?>"><input type="hidden" name="id" value="<?= $id ?>"><input type="hidden" name="action" value="review">
       <button class="btn ghost inline" type="submit" title="Records today as the date someone checked this process is still correct">Confirm still correct</button></form><?php endif ?>
+  <?php if ($canEdit && !$isOld): ?>
+    <?php if ($proc['kind'] === 'template' && $proc['status'] === 'active'): ?><a class="btn ghost inline" href="<?= base_url('process-edit?dept=' . $proc['slug'] . '&copy=' . $id) ?>">Use this template</a><?php endif ?>
+    <form method="post" onsubmit="return confirm('<?= $proc['status'] === 'archived' ? 'Restore this' : 'Remove this' ?> <?= $proc['kind'] === 'template' ? 'template' : 'process' ?>?')"><input type="hidden" name="csrf" value="<?= csrf_token() ?>"><input type="hidden" name="id" value="<?= $id ?>">
+      <input type="hidden" name="action" value="<?= $proc['status'] === 'archived' ? 'restore' : 'archive' ?>"><button class="btn ghost inline" type="submit" title="Hidden from staff, but kept with every version. You can restore it."><?= $proc['status'] === 'archived' ? 'Restore' : 'Remove' ?></button></form><?php endif ?>
   <button class="btn ghost inline" type="button" onclick="print()">Print</button>
 </div></div>
 
@@ -97,12 +103,28 @@ $openReqs = count(array_filter($requests, fn($r) => $r['status'] === 'open'));
 <?php endif ?>
 
 <div class="tabs noprint" data-tabs hidden role="tablist" aria-label="Process sections">
+  <button type="button" role="tab" data-tab="overview">Overview</button>
   <button type="button" role="tab" data-tab="flowchart">Flowchart</button>
   <button type="button" role="tab" data-tab="steps">Steps in detail</button>
   <button type="button" role="tab" data-tab="people">People &amp; documents</button>
   <button type="button" role="tab" data-tab="history">History</button>
   <button type="button" role="tab" data-tab="requests">Requests<?= $openReqs ? " ($openReqs)" : '' ?></button>
 </div>
+
+<section data-tabpanel="overview"><div class="panel" data-animate>
+  <h2>At a glance</h2>
+  <?php
+    $facts = ['How often' => trim((CADENCE[$proc['cadence']] ?? '') . ($snap['frequency'] ? ' · ' . $snap['frequency'] : '')),
+        'Owner' => $proc['owner_position'], 'Starts when' => $snap['trigger'], 'Needed before starting' => $snap['inputs'] ?? '', 'Takes' => $snap['duration'],
+        'How we know it went well' => $snap['kpi'] ?? '', 'What can go wrong' => $snap['exceptions'] ?? '', 'Who to ask when stuck' => $snap['escalation'] ?? '', 'Tips for new hires' => $snap['notes']];
+    $missing = count(array_filter(array_slice($facts, 3), fn($v) => $v === ''));
+  ?>
+  <dl class="facts">
+    <?php foreach ($facts as $k => $v): if ($v === '' || $v === null) continue; ?><div><dt><?= h($k) ?></dt><dd><?= nl2br(h($v)) ?></dd></div><?php endforeach ?>
+    <div><dt>Steps</dt><dd><?= count($steps) ?> · <?= count(array_filter($steps, fn($x) => $x['decision'])) ?> decision(s)</dd></div>
+  </dl>
+  <?php if ($canEdit && $missing > 3): ?><p class="help">Some details are empty. <a href="<?= base_url('process-edit?id=' . $id) ?>">Fill them in</a> so executives and new hires can follow this at a glance.</p><?php endif ?>
+</div></section>
 
 <section data-tabpanel="flowchart"><div class="panel" data-animate><h2>Flowchart</h2>
   <p class="help">Read from top to bottom. A dashed box is a yes/no question.</p><?php require __DIR__ . '/../components/flowchart.php'; ?></div></section>
@@ -111,11 +133,12 @@ $openReqs = count(array_filter($requests, fn($r) => $r['status'] === 'open'));
   <h2>Step by step</h2>
   <div class="table-wrap"><table class="tbl">
     <?php $hasWho = (bool) array_filter($steps, fn($x) => $x['role'] . $x['person'] !== ''); $hasTools = (bool) array_filter($steps, fn($x) => $x['tools'] !== ''); $hasOut = (bool) array_filter($steps, fn($x) => $x['output'] !== ''); ?>
-    <tr><th>#</th><th>Step</th><?php if ($hasWho): ?><th>Who</th><?php endif ?><th>What they do</th><?php if ($hasTools): ?><th>Tools</th><?php endif ?><?php if ($hasOut): ?><th>Result</th><?php endif ?></tr>
+    <?php $hasTime = (bool) array_filter($steps, fn($x) => ($x['time'] ?? '') !== ''); ?>
+    <tr><th>#</th><th>Step</th><?php if ($hasWho): ?><th>Who</th><?php endif ?><th>What they do</th><?php if ($hasTools): ?><th>Tools</th><?php endif ?><?php if ($hasOut): ?><th>Result</th><?php endif ?><?php if ($hasTime): ?><th>Time</th><?php endif ?></tr>
     <?php foreach ($steps as $i => $st): ?>
     <tr><td><?= $i + 1 ?></td><td><strong><?= h($st['title']) ?></strong><?= $st['decision'] ? ' <span class="badge off">decision</span>' : '' ?></td>
       <?php if ($hasWho): ?><td><?= h(trim($st['role'] . ($st['person'] ? ' — ' . $st['person'] : '')) ?: '—') ?></td><?php endif ?>
-      <td><?= nl2br(h($st['detail'])) ?></td><?php if ($hasTools): ?><td><?= h($st['tools'] ?: '—') ?></td><?php endif ?><?php if ($hasOut): ?><td><?= h($st['output'] ?: '—') ?></td><?php endif ?></tr>
+      <td><?= nl2br(h($st['detail'])) ?></td><?php if ($hasTools): ?><td><?= h($st['tools'] ?: '—') ?></td><?php endif ?><?php if ($hasOut): ?><td><?= h($st['output'] ?: '—') ?></td><?php endif ?><?php if ($hasTime): ?><td><?= h($st['time'] ?? '') ?: '—' ?></td><?php endif ?></tr>
     <?php endforeach ?>
   </table></div>
 </div></section>
@@ -128,7 +151,6 @@ $openReqs = count(array_filter($requests, fn($r) => $r['status'] === 'open'));
     <span class="muted">(step <?= h(implode(', ', $p['n'])) ?>)</span></li><?php endforeach ?></ul>
 </div>
 <?php else: ?><div class="panel"><h2>People involved</h2><p class="muted">Nobody is named on the steps yet. The process owner can add who does each step.</p></div><?php endif ?>
-<?php if ($snap['notes']): ?><div class="panel"><h2>Notes for new hires</h2><p><?= nl2br(h($snap['notes'])) ?></p></div><?php endif ?>
 <?php $related = related_documents($snap['docs'] ?? []); if ($related): ?>
 <div class="panel"><h2>Related policies and forms</h2>
   <ul class="plain"><?php foreach ($related as $d): ?><li><a href="<?= base_url('document?id=' . $d['id']) ?>"><?= h($d['title']) ?></a> <span class="muted">(<?= h($d['type']) ?>)</span></li><?php endforeach ?></ul></div>

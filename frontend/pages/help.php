@@ -51,7 +51,10 @@ $r = $user['role'];
 <div class="panel" data-animate>
   <h2>Writing and updating processes</h2>
   <ul class="plain">
-    <li><strong>New process:</strong> Processes → your department → <em>New process</em>. Write the steps in order. For each step say who does it, what they do, the tools used and what comes out.</li>
+    <li><strong>New process:</strong> Processes → your department → <em>New process</em>. Pick a <em>template</em> (daily, weekly, monthly…) and change what does not fit, or start blank. Choose how often it happens so it is listed under Daily, Weekly, Monthly and so on.</li>
+    <li><strong>Steps:</strong> for each step say who does it, what they do, the tools used, what comes out and how long it takes.</li>
+    <li><strong>Details for readers:</strong> what is needed first, how we know it went well, what can go wrong and who to ask when stuck. These fill the Overview tab that executives read first.</li>
+    <li><strong>Remove:</strong> hides a process but keeps it and its history; use <em>Restore</em> to bring it back.</li>
     <li><strong>Decisions:</strong> tick "yes/no decision" on a step and say which step to go to if the answer is No.</li>
     <li><strong>Every save is a new version.</strong> Old versions stay and you can see what changed.</li>
     <li><strong>Who is who:</strong> add your positions and who reports to whom on the department page. New hires rely on it.</li>

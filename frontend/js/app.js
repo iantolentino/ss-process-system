@@ -1,6 +1,6 @@
 // Mild motion only: gentle fade/rise on load. Skipped for users who prefer reduced motion.
 if (window.gsap && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  gsap.from('[data-animate]', { opacity: 0, y: 12, duration: 0.5, stagger: 0.08, ease: 'power1.out', clearProps: 'all' });
+  gsap.from('[data-animate]', { opacity: 0, y: 12, duration: 0.5, stagger: { amount: 0.4 }, ease: 'power1.out', clearProps: 'all' });
 }
 
 // Accessibility fixes applied to the markup as rendered (keeps the PHP templates short).
@@ -19,7 +19,7 @@ window.a11y = (root = document) => {
   root.querySelectorAll('button[title]:not([aria-label])').forEach(b => b.setAttribute('aria-label', b.title));
   root.querySelectorAll('th:not([scope])').forEach(th => th.setAttribute('scope', 'col'));
   root.querySelectorAll('th:empty').forEach(th => { th.innerHTML = '<span class="sr">Actions</span>'; });   // blank header cells (download / action columns)
-  root.querySelectorAll('.table-wrap').forEach(w => { w.tabIndex = 0; });   // wide tables can be scrolled with the keyboard
+  root.querySelectorAll('.table-wrap, .org-wrap').forEach(w => { w.tabIndex = 0; });   // wide tables can be scrolled with the keyboard
   root.querySelectorAll('.alert').forEach(a => a.setAttribute('role', a.classList.contains('error') ? 'alert' : 'status'));
 };
 a11y();

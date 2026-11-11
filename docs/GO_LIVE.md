@@ -27,6 +27,7 @@ Everything is prepared. You only edit the values below and run the commands in o
    ```bash
    php database/migrate.php
    php database/seed.php admin@yourdomain.com 'a-long-password'
+   php database/seed_templates.php     # the six starter process templates (daily, weekly, monthly...)
    php database/preflight.php          # fix everything it marks FAIL
    php database/test_mail.php you@yourdomain.com   # confirm email arrives (check spam)
    php backend/cron/backup.php         # should print: backup ok

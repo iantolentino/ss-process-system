@@ -22,7 +22,7 @@ function add_item(array $user, int $deptId, array $in): void {
     }
     $proc = ($in['process_id'] ?? '') === '' ? null : (int) $in['process_id'];
     $doc = ($in['document_id'] ?? '') === '' ? null : (int) $in['document_id'];
-    if ($proc !== null && !$pdo->query("SELECT COUNT(*) FROM processes WHERE id = $proc AND status = 'active'")->fetchColumn()) throw new UserError('Pick an existing process.');
+    if ($proc !== null && !$pdo->query("SELECT COUNT(*) FROM processes WHERE id = $proc AND status = 'active' AND kind = 'process'")->fetchColumn()) throw new UserError('Pick an existing process.');
     if ($doc !== null && !$pdo->query("SELECT COUNT(*) FROM documents WHERE id = $doc AND status = 'active'")->fetchColumn()) throw new UserError('Pick an existing document.');
 
     $pdo->prepare('INSERT INTO onboarding_items (department_id, position_id, week_no, title, detail, process_id, document_id) VALUES (?,?,?,?,?,?,?)')

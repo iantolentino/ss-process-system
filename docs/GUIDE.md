@@ -23,7 +23,11 @@ Sign in with your work email. Forgot your password? Use **Forgot password** on t
 
 ## Process owners (per department)
 
-- **Add or edit a process**: Processes → department → *New process*. Fill in the steps in order: who (position and name), what they do, tools, the output, and an optional yes/no decision with "No → go to step N". The flowchart is drawn from the steps.
+- **Add a process**: Processes → department → *New process*. Start from a **template** (Daily, Weekly, Monthly, Quarterly, Yearly or As-needed layouts are ready) and change what does not fit, or start blank. Say **how often** it happens: the department page groups processes under Daily, Weekly, Monthly and so on, which is the view executives read.
+- **Fill in the details**: for each step say who does it, what they do, tools, result and how long. A yes/no decision can say "No → go to step N". The *Details that help readers* section (what is needed first, how we know it went well, what can go wrong, who to ask when stuck) fills the **Overview** tab, the first thing a reader sees.
+- **Edit** with *Edit this process*; every save is a new version.
+- **Remove** hides a process or template from staff. Nothing is deleted: it stays with all versions under *Removed* on the department page, and *Restore* brings it back.
+- **Make your own template**: save a process as *A reusable template*. It shows in the template gallery for every department and is not shown to staff as a live process.
 - Every save creates a new version; old versions stay viewable.
 - **Positions** (who's who) and who they report to build the org chart. Fill these in: new hires rely on them.
 - **Confirm still correct** when you have checked a process is still correct.

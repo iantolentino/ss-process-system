@@ -29,14 +29,26 @@ $q = trim($_GET['q'] ?? '');
 $title = $dept ? $dept['name'] : 'Processes';
 require __DIR__ . '/../components/app_open.php';
 
-$cols = 'p.id, p.name, p.purpose, p.owner_position, p.status, p.last_reviewed_at, v.version_no, JSON_LENGTH(v.snapshot, "$.steps") AS steps, d.name AS dept, d.slug';
+$cols = 'p.id, p.name, p.purpose, p.owner_position, p.status, p.last_reviewed_at, p.cadence, p.kind, v.version_no, JSON_LENGTH(v.snapshot, "$.steps") AS steps, JSON_UNQUOTE(JSON_EXTRACT(v.snapshot, "$.duration")) AS duration, d.name AS dept, d.slug';
 $from = 'FROM processes p JOIN departments d ON d.id = p.department_id LEFT JOIN process_versions v ON v.id = p.current_version_id';
 ?>
 <?php if ($dept): ?>
   <?php
-    $st = db()->prepare("SELECT $cols $from WHERE p.department_id = ? AND (p.status IN ($vis) OR (? AND p.status <> 'archived')) ORDER BY p.name");
+    $st = db()->prepare("SELECT $cols $from WHERE p.department_id = ? AND p.kind = 'process' AND (p.status IN ($vis) OR (? AND p.status <> 'archived')) ORDER BY FIELD(p.cadence, 'daily','weekly','monthly','quarterly','yearly','as_needed'), p.name");
     $st->execute([$dept['id'], (int) $canEdit]);
     $rows = $st->fetchAll();
+    $byCad = [];
+    foreach ($rows as $r) $byCad[$r['cadence']][] = $r;
+    // Editors also see this department's templates and the removed (archived) items so they can be restored.
+    $tpl = $arch = [];
+    if ($canEdit) {
+        $x = db()->prepare("SELECT $cols $from WHERE p.department_id = ? AND p.kind = 'template' AND p.status <> 'archived' ORDER BY p.name");
+        $x->execute([$dept['id']]);
+        $tpl = $x->fetchAll();
+        $x = db()->prepare("SELECT $cols $from WHERE p.department_id = ? AND p.status = 'archived' ORDER BY p.name");
+        $x->execute([$dept['id']]);
+        $arch = $x->fetchAll();
+    }
     $pos = db()->prepare('SELECT p.*, r.title AS reports_to FROM positions p LEFT JOIN positions r ON r.id = p.reports_to_id WHERE p.department_id = ? ORDER BY p.title');
     $pos->execute([$dept['id']]);
     $positions = $pos->fetchAll();
@@ -51,17 +63,44 @@ $from = 'FROM processes p JOIN departments d ON d.id = p.department_id LEFT JOIN
   </div></div>
   <?php if ($error): ?><div class="alert error"><?= h($error) ?></div><?php endif ?>
 
-  <div class="panel table-wrap tight"><table class="tbl" data-animate>
-    <tr><th>Process</th><th>Owner</th><th>Steps</th><th>Version</th><th>Last checked</th></tr>
-    <?php foreach ($rows as $r): ?>
-    <tr>
-      <td><a href="<?= base_url('process?id=' . $r['id']) ?>"><?= h($r['name']) ?></a>
-        <?php if ($r['status'] !== 'active'): ?><span class="badge off"><?= h($r['status']) ?></span><?php endif ?>
-        <div class="muted"><?= h(mb_strimwidth($r['purpose'], 0, 120, '…')) ?></div></td>
-      <td><?= h($r['owner_position'] ?: '—') ?></td><td><?= (int) $r['steps'] ?></td><td>v<?= (int) $r['version_no'] ?></td><td><?= h($r['last_reviewed_at'] ?? 'never') ?></td>
-    </tr>
-    <?php endforeach; if (!$rows): ?><tr><td colspan="5" class="muted">No processes written down for this department yet.<?= $canEdit ? ' Use “New process” to add the first one.' : '' ?></td></tr><?php endif ?>
-  </table></div>
+  <?php
+    // One table of processes: name + purpose, owner, how long, steps, last checked. $showCadence adds the cadence badge (used for editor lists).
+    $procTable = function (array $list, bool $showCadence = false) { ?>
+    <div class="table-wrap"><table class="tbl">
+      <tr><th>Process</th><th>Owner</th><th>Takes</th><th>Steps</th><th>Last checked</th></tr>
+      <?php foreach ($list as $r): ?>
+      <tr>
+        <td><a href="<?= base_url('process?id=' . $r['id']) ?>"><?= h($r['name']) ?></a>
+          <?php if ($r['status'] !== 'active'): ?><span class="badge off"><?= h($r['status']) ?></span><?php endif ?>
+          <?php if ($showCadence): ?><span class="badge off"><?= h(CADENCE[$r['cadence']]) ?></span><?php endif ?>
+          <div class="muted"><?= h(mb_strimwidth($r['purpose'], 0, 140, '…')) ?></div></td>
+        <td><?= h($r['owner_position'] ?: '—') ?></td><td><?= h($r['duration'] ?: '—') ?></td><td><?= (int) $r['steps'] ?></td><td><?= h($r['last_reviewed_at'] ?? 'never') ?></td>
+      </tr>
+      <?php endforeach ?>
+    </table></div>
+  <?php }; ?>
+
+  <?php if ($rows): ?>
+  <div class="chips" style="margin:0 0 16px"><?php foreach (CADENCE as $k => $label): if (empty($byCad[$k])) continue; ?><a class="chip" href="#c-<?= $k ?>"><b><?= count($byCad[$k]) ?></b> <?= h(strtolower($label)) ?></a><?php endforeach ?></div>
+  <?php foreach (CADENCE as $k => $label): if (empty($byCad[$k])) continue; ?>
+  <div class="panel" id="c-<?= $k ?>" data-animate>
+    <h2><?= h($label) ?> <span class="muted">· <?= count($byCad[$k]) ?></span></h2>
+    <p class="help"><?= ['daily' => 'Done every working day.', 'weekly' => 'Done once a week.', 'monthly' => 'Done once a month.', 'quarterly' => 'Done four times a year.', 'yearly' => 'Done once a year.', 'as_needed' => 'Done when a situation comes up.'][$k] ?></p>
+    <?php $procTable($byCad[$k]) ?>
+  </div>
+  <?php endforeach ?>
+  <?php else: ?>
+  <div class="empty">No processes written down for this department yet.<?= $canEdit ? ' Use “New process” to add the first one, or start from a template.' : '' ?></div>
+  <?php endif ?>
+
+  <?php if ($canEdit && $tpl): ?>
+  <div class="panel noprint"><h2>Templates of this department <span class="muted">· <?= count($tpl) ?></span></h2>
+    <p class="help">Reusable starting points. They are not shown to staff as processes.</p><?php $procTable($tpl, true) ?></div>
+  <?php endif ?>
+  <?php if ($canEdit && $arch): ?>
+  <details class="panel noprint"><summary>Removed (<?= count($arch) ?>)</summary>
+    <p class="help">Hidden from staff but kept with every version. Open one and press Restore to bring it back.</p><?php $procTable($arch, true) ?></details>
+  <?php endif ?>
 
   <div class="panel" data-animate>
     <h2>Who's who in this department</h2>
@@ -90,10 +129,10 @@ $from = 'FROM processes p JOIN departments d ON d.id = p.department_id LEFT JOIN
 
 <?php else: ?>
   <?php
-    $depts = db()->query("SELECT d.*, (SELECT COUNT(*) FROM processes p WHERE p.department_id = d.id AND p.status = 'active') AS n FROM departments d ORDER BY d.sort")->fetchAll();
+    $depts = db()->query("SELECT d.*, (SELECT COUNT(*) FROM processes p WHERE p.department_id = d.id AND p.status = 'active' AND p.kind = 'process') AS n FROM departments d ORDER BY d.sort")->fetchAll();
     $found = [];
     if ($q !== '') {
-        $st = db()->prepare("SELECT $cols $from WHERE p.status IN ($vis) AND (p.name LIKE ? OR p.purpose LIKE ? OR v.snapshot LIKE ?) ORDER BY d.sort, p.name LIMIT 50");
+        $st = db()->prepare("SELECT $cols $from WHERE p.status IN ($vis) AND p.kind = 'process' AND (p.name LIKE ? OR p.purpose LIKE ? OR v.snapshot LIKE ?) ORDER BY d.sort, p.name LIMIT 50");
         $st->execute(["%$q%", "%$q%", "%$q%"]);
         $found = $st->fetchAll();
     }

@@ -45,7 +45,7 @@ if ($manage) {
     $pos = db()->prepare('SELECT id, title FROM positions WHERE department_id = ? ORDER BY title');
     $pos->execute([$deptId]);
     $positions = $pos->fetchAll();
-    $procs = db()->query("SELECT id, name FROM processes WHERE status = 'active' AND department_id = $deptId ORDER BY name")->fetchAll();
+    $procs = db()->query("SELECT id, name FROM processes WHERE status = 'active' AND kind = 'process' AND department_id = $deptId ORDER BY name")->fetchAll();
     $docs = db()->query("SELECT id, type, title FROM documents WHERE status = 'active' ORDER BY type, title")->fetchAll();
 }
 

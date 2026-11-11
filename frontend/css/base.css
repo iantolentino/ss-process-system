@@ -208,3 +208,8 @@ input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--primary)
 a.card { transition: border-color .15s, box-shadow .15s; }
 a.card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.06); }
 @media (prefers-reduced-motion: reduce) { a.card { transition: none; } }
+
+/* ---- Process overview facts ---- */
+dl.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px 24px; }
+dl.facts dt { font-size: 12px; font-weight: 500; color: var(--muted-foreground); margin-bottom: 2px; }
+dl.facts dd { font-size: 14px; }
