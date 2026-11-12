@@ -1,5 +1,7 @@
 # Data needed before go-live
 
+> **Update 2026-11-12:** no new data is coming from Sir Bones. The system starts from the two legacy folders already provided, plus one sample for each part (`php database/seed_samples.php`) as a template guide. Departments add their real entries after go-live. Treat the lists below as a wish list, not a blocker.
+
 Send this to Sir Bones. Until it arrives, the system runs on the old data (46 imported processes, 3 legacy users) and the role mapping in `database/import_legacy_users.php` is only a guess.
 
 ## 1. Users and roles (most important)

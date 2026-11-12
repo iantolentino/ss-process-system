@@ -28,6 +28,7 @@ Everything is prepared. You only edit the values below and run the commands in o
    php database/migrate.php
    php database/seed.php admin@yourdomain.com 'a-long-password'
    php database/seed_templates.php     # the six starter process templates (daily, weekly, monthly...)
+   php database/seed_samples.php       # one sample per part: a process, a policy and a form, as a template guide
    php database/preflight.php          # fix everything it marks FAIL
    php database/test_mail.php you@yourdomain.com   # confirm email arrives (check spam)
    php backend/cron/backup.php         # should print: backup ok
@@ -40,8 +41,8 @@ Everything is prepared. You only edit the values below and run the commands in o
 
 Do this last, once the site is confirmed working:
 
-1. Create the real users (**People & roles**), or import them: `php database/import_legacy_users.php path/to/employees.db`. Update the role mapping in that file first, with what Sir Bones confirms.
-2. Load the 46 legacy processes if you want them: [DEPLOY.md §9](DEPLOY.md).
+1. Create the real users (**People & roles**) with the four roles. No new data is coming from Sir Bones; the two legacy folders already provided are the only source. (`database/import_legacy_users.php` can copy users from the old `employees.db` if you want, after you check its role mapping.)
+2. Load the 46 legacy processes from the legacy folder if you want them: [DEPLOY.md §9](DEPLOY.md). The three samples (a process, a policy, a form) stay as the template guide for departments.
 3. Add the real policies, memos, manuals and forms (**Policies & forms → Add a document**).
 4. Each department's process owner fills in who does each step, the positions and the onboarding checklist.
 5. Delete or disable any test accounts. Never run `tests/*_smoke.sh` or `seed_demo.php` on the live site.

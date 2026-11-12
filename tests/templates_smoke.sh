@@ -63,4 +63,10 @@ check "overview matrix has a daily column" "$(echo "$OV" | grep -c "overview?c=d
 check "cadence filter keeps only that cadence" "$(curl -s -b "$T/em" "$B/overview?c=weekly" | grep -c "Backups $S")" 0
 check "templates are not in the overview" "$(echo "$OV" | grep -c "Weekly routine")" 0
 check "overview needs login" "$(curl -s -o /dev/null -w '%{http_code}' "$B/overview")" 302
+# --- one sample per part (php database/seed_samples.php)
+SP=$($M "SELECT id FROM processes WHERE name='Sample: Weekly team report'" | tr -d '')
+check "sample process is filled in" "$(curl -s -b "$T/em" "$B/process?id=$SP" | grep -c 'Report sent by 10:00')" 1
+SD=$($M "SELECT v.id FROM documents d JOIN document_versions v ON v.id=d.current_version_id WHERE d.title='Sample: Leave Policy'" | tr -d '')
+check "sample policy downloads" "$(curl -s -b "$T/em" "$B/download?v=$SD" | grep -c 'SAMPLE POLICY')" 1
+check "sample form is listed under Forms" "$(curl -s -b "$T/em" "$B/policies?type=form" | grep -c 'Sample: Leave Request Form')" 1
 rm -rf "$T"; exit $fail
