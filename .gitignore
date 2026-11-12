@@ -10,3 +10,5 @@ logs/*
 database/backups/*
 !**/.gitkeep
 database/seeds/legacy_*.json
+deliverables/
+.env.*
