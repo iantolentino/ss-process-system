@@ -10,7 +10,7 @@ tok(){ curl -s -c "$1" -b "$1" "$B/$2" | grep -o 'name="csrf" value="[a-f0-9]*"'
 login(){ curl -s -c "$1" -b "$1" -o /dev/null -d "csrf=$(tok "$1" login)&email=$2&password=$3" "$B/login"; }
 code(){ curl -s -c "$1" -b "$1" -o /dev/null -w '%{http_code}' "${@:3}" "$B/$2"; }
 
-printf 'v1 text' > "$T/a.txt"; printf 'v2 text' > "$T/b.txt"; printf 'MZ' > "$T/bad.exe"
+printf 'v1 text' > "$T/a.txt"; printf 'v2 text' > "$T/b.txt"; printf 'MZ' > "$T/bad.exe"; printf '<html><script>alert(1)</script></html>' > "$T/fake.pdf"
 login "$T/admin" "$ADMIN" "$APW"
 
 # --- users
@@ -28,6 +28,7 @@ R=$(up "$T/own" -F type=policy -F "title=Smoke Policy $S" -F category=Test -F ve
 check "owner creates document" "${R%% *}" 302
 DOC=$(echo "$R" | grep -o 'id=[0-9]*' | cut -d= -f2)
 check "employee cannot create" "$(up "$T/emp" -F type=policy -F title=x -F version_no=1 -F effective_date=2026-01-01 -F "file=@$T/a.txt" "$B/policies" | cut -d' ' -f1)" 403
+check "web page renamed .pdf rejected" "$(curl -s -c "$T/own" -b "$T/own" -F "csrf=$(tok "$T/own" policies)" -F type=policy -F title=Fake -F version_no=1 -F effective_date=2026-01-01 -F "file=@$T/fake.pdf" "$B/policies" | grep -c 'does not look like a real')" 1
 check "bad file type rejected" "$(curl -s -c "$T/own" -b "$T/own" -F "csrf=$(tok "$T/own" policies)" -F type=policy -F title=Bad -F version_no=1 -F effective_date=2026-01-01 -F "file=@$T/bad.exe" "$B/policies" | grep -c 'Allowed file types')" 1
 check "new version" "$(curl -s -c "$T/own" -b "$T/own" -o /dev/null -w '%{http_code}' -F "csrf=$(tok "$T/own" "document?id=$DOC")" -F id=$DOC -F action=version -F version_no=2.0 -F effective_date=2026-06-01 -F "changelog=Updated scope" -F "file=@$T/b.txt" "$B/document")" 302
 check "duplicate version rejected" "$(curl -s -c "$T/own" -b "$T/own" -F "csrf=$(tok "$T/own" "document?id=$DOC")" -F id=$DOC -F action=version -F version_no=2.0 -F effective_date=2026-06-01 -F changelog=x -F "file=@$T/b.txt" "$B/document" | grep -c 'already exists')" 1

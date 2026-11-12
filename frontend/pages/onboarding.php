@@ -11,7 +11,7 @@ if ($slug === '' && $user['department_id']) {
 if ($slug === '') redirect('process-library');
 $s = db()->prepare('SELECT * FROM departments WHERE slug = ?');
 $s->execute([$slug]);
-if (!($dept = $s->fetch())) { http_response_code(404); exit('Department not found.'); }
+if (!($dept = $s->fetch())) { error_page(404, 'Department not found.'); }
 
 $deptId = (int) $dept['id'];
 $mine = (int) $user['department_id'] === $deptId;       // checklist is personal: only for your own department
@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($act === 'toggle' && $mine) set_item_done($user, (int) $_POST['item_id'], !empty($_POST['done']));
         elseif ($manage && $act === 'add') { add_item($user, $deptId, $_POST); flash('Checklist item added.'); }
         elseif ($manage && $act === 'delete') { delete_item($user, $deptId, (int) $_POST['item_id']); flash('Checklist item deleted.'); }
-        else { http_response_code(403); exit('You do not have access to this action.'); }
+        else { error_page(403, 'You do not have access to this action.'); }
         redirect('onboarding?dept=' . $slug);
     } catch (UserError $e) {
         $error = $e->getMessage();

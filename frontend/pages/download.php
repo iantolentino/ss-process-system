@@ -6,7 +6,7 @@ $s = db()->prepare('SELECT v.*, d.status FROM document_versions v JOIN documents
 $s->execute([(int) ($_GET['v'] ?? 0)]);
 $v = $s->fetch();
 $path = $v ? ROOT . '/' . $v['file_path'] : '';
-if (!$v || ($v['status'] !== 'active' && !can_edit_docs($user)) || !is_file($path)) { http_response_code(404); exit('File not found.'); }
+if (!$v || ($v['status'] !== 'active' && !can_edit_docs($user)) || !is_file($path)) { error_page(404, 'File not found.'); }
 
 audit((int) $user['id'], 'download', 'document', (int) $v['document_id'], null, ['version_id' => (int) $v['id']]);
 header('Content-Type: application/octet-stream');

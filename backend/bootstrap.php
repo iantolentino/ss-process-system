@@ -95,6 +95,19 @@ function h($s): string {
 // Thrown for mistakes the user can fix; pages show the message instead of a 500.
 class UserError extends Exception {}
 
+// A friendly page for 400 / 403 / 404 instead of bare text. Sends the status code and stops.
+function error_page(int $code, string $msg): void {
+    http_response_code($code);
+    $titles = [400 => 'Request problem', 403 => 'No access', 404 => 'Not found'];
+    $base = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/\\');
+    $css = $base . '/frontend/css/base.css';
+    echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
+        . '<title>' . h($titles[$code] ?? 'Error') . ' — Strata Staff</title><link rel="stylesheet" href="' . h($css) . '"></head><body>'
+        . '<main style="max-width:440px;margin:15vh auto;padding:0 16px"><div class="panel"><p class="muted">' . $code . '</p>'
+        . '<h1 class="title">' . h($titles[$code] ?? 'Something went wrong') . '</h1><p class="lead" style="margin:8px 0 20px">' . h($msg) . '</p>'
+        . '<a class="btn inline" href="' . h($base . '/dashboard') . '">Go to Home</a></div></main></body></html>';
+    exit;
+}
 function flash(?string $msg = null): ?string {
     if (session_status() !== PHP_SESSION_ACTIVE) session_start();
     if ($msg !== null) { $_SESSION['flash'] = $msg; return null; }

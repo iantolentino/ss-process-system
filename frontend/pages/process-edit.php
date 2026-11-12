@@ -7,7 +7,7 @@ $proc = $snap = null;
 if ($id) {
     $s = db()->prepare('SELECT p.*, d.name AS dept, d.slug FROM processes p JOIN departments d ON d.id = p.department_id WHERE p.id = ?');
     $s->execute([$id]);
-    if (!($proc = $s->fetch())) { http_response_code(404); exit('Process not found.'); }
+    if (!($proc = $s->fetch())) { error_page(404, 'Process not found.'); }
     $deptId = (int) $proc['department_id'];
     $v = db()->prepare('SELECT snapshot FROM process_versions WHERE id = ?');
     $v->execute([$proc['current_version_id']]);
@@ -16,10 +16,10 @@ if ($id) {
 } else {
     $s = db()->prepare('SELECT * FROM departments WHERE slug = ?');
     $s->execute([$_GET['dept'] ?? $_POST['dept'] ?? '']);
-    if (!($dept = $s->fetch())) { http_response_code(404); exit('Department not found.'); }
+    if (!($dept = $s->fetch())) { error_page(404, 'Department not found.'); }
     $deptId = (int) $dept['id'];
 }
-if (!can_edit_process($user, $deptId)) { http_response_code(403); exit('You do not have access to edit this department.'); }
+if (!can_edit_process($user, $deptId)) { error_page(403, 'You do not have access to edit this department.'); }
 
 $error = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

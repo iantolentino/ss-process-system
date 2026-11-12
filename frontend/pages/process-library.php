@@ -7,13 +7,13 @@ $dept = null;
 if ($slug !== '') {
     $s = db()->prepare('SELECT * FROM departments WHERE slug = ?');
     $s->execute([$slug]);
-    if (!($dept = $s->fetch())) { http_response_code(404); exit('Department not found.'); }
+    if (!($dept = $s->fetch())) { error_page(404, 'Department not found.'); }
 }
 $canEdit = $dept ? can_edit_process($user, (int) $dept['id']) : false;
 
 $error = null;
 if ($dept && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!$canEdit) { http_response_code(403); exit('You do not have access to this action.'); }
+    if (!$canEdit) { error_page(403, 'You do not have access to this action.'); }
     try {
         if (($_POST['action'] ?? '') === 'remove_position') remove_position($user, (int) $dept['id'], (int) $_POST['id']);
         else add_position($user, (int) $dept['id'], $_POST);

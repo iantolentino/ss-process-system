@@ -40,8 +40,7 @@ function csrf_check(): void {
     // Empty session token must fail too: hash_equals('', '') is true.
     if (empty($_SESSION['csrf']) || !hash_equals($_SESSION['csrf'], (string) ($_POST['csrf'] ?? ''))) {
         log_line('error', 'WARN', 'csrf mismatch', ['ip' => $_SERVER['REMOTE_ADDR'] ?? '']);
-        http_response_code(400);
-        exit('Invalid request. Go back, refresh and try again.');
+        error_page(400, 'Invalid request. Go back, refresh and try again.');
     }
 }
 
@@ -64,8 +63,7 @@ function require_role(string ...$roles): array {
     $u = require_login();
     if ($u['role'] !== 'admin' && !in_array($u['role'], $roles, true)) {
         log_line('app', 'WARN', 'forbidden', ['user' => $u['id'], 'roles' => $roles]);
-        http_response_code(403);
-        exit('You do not have access to this page.');
+        error_page(403, 'You do not have access to this page.');
     }
     return $u;
 }

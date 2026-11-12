@@ -5,7 +5,7 @@ $canEdit = can_edit_glossary($user);
 
 $error = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!$canEdit) { http_response_code(403); exit('You do not have access to this action.'); }
+    if (!$canEdit) { error_page(403, 'You do not have access to this action.'); }
     try {
         if (($_POST['action'] ?? '') === 'delete') { delete_term($user, (int) $_POST['id']); flash('Term deleted.'); }
         else { save_term($user, ($_POST['id'] ?? '') === '' ? null : (int) $_POST['id'], $_POST); flash('Glossary saved.'); }

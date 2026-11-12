@@ -18,6 +18,19 @@ function valid_date(string $d): bool {
     return $x && $x->format('Y-m-d') === $d;
 }
 
+// The file content must look like what its extension claims: stops an .exe or a web page renamed to .pdf.
+// shortcut: Office files are only checked to be Office/zip containers, not opened.
+function content_ok(string $path, string $ext): bool {
+    if (!function_exists('finfo_open')) return true;   // extension missing: the extension allow-list above still applies
+    $mime = (string) finfo_file(finfo_open(FILEINFO_MIME_TYPE), $path);
+    return match ($ext) {
+        'pdf' => $mime === 'application/pdf',
+        'txt', 'csv' => str_starts_with($mime, 'text/') || in_array($mime, ['application/csv', 'inode/x-empty'], true),
+        'docx', 'xlsx', 'pptx' => str_starts_with($mime, 'application/vnd.openxmlformats') || in_array($mime, ['application/zip', 'application/x-zip', 'application/octet-stream'], true),
+        'doc', 'xls', 'ppt' => str_starts_with($mime, 'application/vnd.ms-') || in_array($mime, ['application/msword', 'application/CDFV2', 'application/x-ole-storage', 'application/octet-stream'], true),
+        default => false,
+    };
+}
 // Validates and moves the upload into files/uploads/<docId>/. Returns the data for document_versions.
 function store_upload(array $f, int $docId): array {
     if (($f['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) throw new UserError('Choose a file to upload (max 20 MB).');
@@ -25,6 +38,7 @@ function store_upload(array $f, int $docId): array {
     $ext = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
     if (!in_array($ext, DOC_EXT, true)) throw new UserError('Allowed file types: ' . implode(', ', DOC_EXT) . '.');
     if (!is_uploaded_file($f['tmp_name'])) throw new UserError('Upload failed. Try again.');
+    if (!content_ok($f['tmp_name'], $ext)) throw new UserError('That file does not look like a real .' . $ext . ' file. Check it opens, then try again.');
 
     $dir = ROOT . "/files/uploads/$docId";
     if (!is_dir($dir) && !mkdir($dir, 0750, true)) throw new RuntimeException("cannot create $dir");

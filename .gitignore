@@ -12,3 +12,4 @@ database/backups/*
 database/seeds/legacy_*.json
 deliverables/
 .env.*
+!logs/README.md

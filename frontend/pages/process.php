@@ -7,7 +7,7 @@ $s = db()->prepare('SELECT p.*, d.name AS dept, d.slug FROM processes p JOIN dep
 $s->execute([$id]);
 $proc = $s->fetch();
 $canEdit = $proc && can_edit_process($user, (int) $proc['department_id']);
-if (!$proc || ($proc['status'] !== 'active' && !$canEdit && $user['role'] !== 'admin')) { http_response_code(404); exit('Process not found.'); }
+if (!$proc || ($proc['status'] !== 'active' && !$canEdit && $user['role'] !== 'admin')) { error_page(404, 'Process not found.'); }
 
 $error = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         elseif ($canEdit && $act === 'review') { mark_reviewed($user, $id); flash('Marked as reviewed today.'); }
         elseif ($canEdit && in_array($act, ['archive', 'restore'], true)) { set_process_status($user, $id, $act === 'archive' ? 'archived' : 'active'); flash($act === 'archive' ? 'Removed from the library. It is kept and can be restored.' : 'Restored.'); }
         elseif ($canEdit && $act === 'resolve') { resolve_change_request($user, (int) $_POST['request_id'], $_POST['status'] ?? ''); flash('Request updated.'); }
-        else { http_response_code(403); exit('You do not have access to this action.'); }
+        else { error_page(403, 'You do not have access to this action.'); }
         redirect("process?id=$id");
     } catch (UserError $e) {
         $error = $e->getMessage();
@@ -32,7 +32,7 @@ $versions = $vs->fetchAll();
 $want = (int) ($_GET['v'] ?? 0);
 $ver = null;
 foreach ($versions as $v) if ($want ? $v['version_no'] == $want : $v['id'] == $proc['current_version_id']) $ver = $v;
-if (!$ver) { http_response_code(404); exit('Version not found.'); }
+if (!$ver) { error_page(404, 'Version not found.'); }
 $isOld = $ver['id'] != $proc['current_version_id'];
 $q = db()->prepare('SELECT snapshot FROM process_versions WHERE id = ?');
 $q->execute([$ver['id']]);

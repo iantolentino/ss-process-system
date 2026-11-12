@@ -7,11 +7,11 @@ $id = (int) ($_GET['id'] ?? $_POST['id'] ?? 0);
 $s = db()->prepare('SELECT d.*, CONCAT(u.first_name, " ", u.last_name) AS owner FROM documents d LEFT JOIN users u ON u.id = d.owner_id WHERE d.id = ?');
 $s->execute([$id]);
 $doc = $s->fetch();
-if (!$doc || ($doc['status'] !== 'active' && !$canEdit)) { http_response_code(404); exit('Document not found.'); }
+if (!$doc || ($doc['status'] !== 'active' && !$canEdit)) { error_page(404, 'Document not found.'); }
 
 $error = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!$canEdit) { http_response_code(403); exit('You do not have access to this action.'); }
+    if (!$canEdit) { error_page(403, 'You do not have access to this action.'); }
     try {
         if (($_POST['action'] ?? '') === 'version') {
             add_version($user, $id, $_POST, $_FILES['file'] ?? []);

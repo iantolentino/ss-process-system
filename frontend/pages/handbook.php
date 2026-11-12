@@ -13,7 +13,7 @@ if ($slug === '') redirect('process-library');   // no department known: pick on
 
 $s = db()->prepare('SELECT * FROM departments WHERE slug = ?');
 $s->execute([$slug]);
-if (!($dept = $s->fetch())) { http_response_code(404); exit('Department not found.'); }
+if (!($dept = $s->fetch())) { error_page(404, 'Department not found.'); }
 
 $ps = db()->prepare("SELECT p.id, p.name, p.purpose, p.owner_position, p.cadence, p.last_reviewed_at, v.version_no, v.snapshot
                      FROM processes p JOIN process_versions v ON v.id = p.current_version_id

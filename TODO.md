@@ -1,28 +1,28 @@
 # TODO — Strata Staff Process & Policy System
 
-Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `(?)` needs owner answer
+Legend: `[-]` deferred on purpose · `[ ]` todo · `[~]` in progress · `[x]` done · `(?)` needs owner answer
 
 ## Open questions (owner)
 1. [x] Stack: PHP 8 + MySQL
 2. [x] Ponytail = DietrichGebert/ponytail
 3. [x] Roles confirmed: admin, policy_owner, process_owner, employee
 4. [x] Uploaded files, versioned
-5. (?) Should old versions stay downloadable forever? Retention for logs (e.g. keep 7 years)?
+5. [x] Old versions stay downloadable forever; retention: backups 30d, app/error logs 90d, audit forever (confirmed)
 6. [x] YES review-due dates + dashboard reminder
 7. [x] NO acknowledgement UI for now (table kept)
 8. [x] Form steps -> auto chart
 9. [x] Login required for everything
 10. [x] Email/password + reset by SMTP email; SSO later
-11. (?) Real employee data: migrate users from `employees.db`? (Never push it to GitHub.)
+11. [x] No new data is coming: users are added in the app (People & roles); `database/import_legacy_users.php` is optional. Employee data is never pushed to GitHub
 12. [x] Public repo, code only
 13. [x] Domain: owner will use a different domain than stratastaff.com (set `APP_URL`; nothing is hard-coded)
-14. (?) Brand: keep legacy fonts/colours for now, redesign later — confirm.
+14. [x] Brand: redesigned to a shadcn-style look (tokens at the top of `frontend/css/base.css`)
 
 ## Phase 0 — Setup
 - [x] Decide stack: PHP 8 + MySQL; ponytail = DietrichGebert/ponytail
 - [x] Run AI Nexus installer into project
 - [x] git init, .gitignore, remote set (code only, repo public)
-- [ ] Diff the two `SS_Pol_Portal.html` copies; keep newest
+- [x] Diff the two `SS_Pol_Portal.html` copies: the `PL Project` one is newer (see docs/LEGACY_NOTES.md)
 - [x] Legacy moved to `_legacy/` (git-ignored)
 
 ## Phase 1 — Scaffold (folder layout)
@@ -40,23 +40,23 @@ process/
 ├─ _brain/          AI Nexus
 ├─ PROGRESS.md  TODO.md  README.md
 ```
-- [ ] Create folders + README per folder (purpose, how to debug)
-- [ ] Config via `.env` (never committed) + `.env.example`
-- [ ] Router: `/login`, `/dashboard`, `/policies`, `/process-library`, `/admin`
+- [x] Create folders + README per folder (purpose, how to debug)
+- [x] Config via `.env` (never committed) + `.env.example`
+- [x] Router: front controller `index.php` with a page whitelist
 
 ## Phase 2 — Database
-- [ ] `users` (name, middle, last, email, hash, role, active, last_login)
-- [ ] `departments`
-- [ ] `positions` (title, dept, reports_to)
-- [ ] `document_types` (policy, memo, manual, form) · `categories`
-- [ ] `documents` (id, type, title, category, owner, status, review_due, current_version_id)
-- [ ] `document_versions` (version no., file path, hash, changelog, effective_date, uploaded_by, uploaded_at) — **never overwritten**
-- [ ] `processes` (dept, name, purpose, owner position, status, current_version_id)
-- [ ] `process_versions`, `process_steps` (order, title, description, position/role, tools, inputs/outputs, SLA, decision branches)
-- [ ] `process_change_requests` (from ticketing page)
-- [ ] `acknowledgements` (user, doc version, date)
-- [ ] `audit_log` (who, what, entity, before/after JSON, IP, timestamp) — append-only
-- [ ] `login_attempts`, `password_resets`
+- [x] `users` (name, middle, last, email, hash, role, active, last_login, department, position)
+- [x] `departments`
+- [x] `positions` (title, dept, reports_to)
+- [x] Document types (policy, memo, manual, form) are fixed in code; categories are free text on the document
+- [x] `documents` (type, title, category, owner, status, review_due, current_version_id, memo fields)
+- [x] `document_versions` (version no., file path, hash, changelog, effective_date, uploaded_by): never overwritten
+- [x] `processes` (dept, name, purpose, owner position, cadence, kind, status, current_version_id)
+- [x] `process_versions` hold the whole process (steps, who, tools, decisions) as JSON, one row per version
+- [x] `change_requests` (from the ticketing page)
+- [x] `acknowledgements` table kept; no screen for it (owner said no for now)
+- [x] `audit_log` (who, what, entity, before/after JSON, IP, timestamp), append-only
+- [x] `login_attempts`, `password_resets`
 - [x] Migration runner + seed (`database/migrate.php`, `seed.php`)
 - [x] Backup script `backend/cron/backup.php` (DB + uploads, 30-day prune, non-zero exit on failure); log cleanup `backend/cron/clean_logs.php`
 
@@ -78,18 +78,18 @@ process/
 - [x] Archive instead of delete (restore = set active)
 - [x] Compare versions (dates, size, change note; line diff for .txt/.csv; other types: download both)
 - [x] Review-due dates + dashboard "Reviews due" panel
-- [ ] Acknowledgement tracking (if Q7 yes)
+- [-] Acknowledgement tracking: deferred (owner said no UI for now; table exists)
 - [x] Memos: from, audience, expiry (migration 002; expired badge)
 - [x] Forms: downloadable + category (same as other types)
-- [ ] Optional protected/no-copy viewer (legacy `no-copy.html`)
+- [-] Optional protected/no-copy viewer: deferred (not needed for launch)
 - [x] SharePoint link field
 
 ## Phase 5 — Process Library (own page + flow)
 - [x] Department grid (12) → department page → process list → process detail
 - [x] Easy add process: guided form, no code (duplicate-from-template NOT done)
 - [x] Add/edit steps: order (move up/down), who (position + name), what, tools, output, yes/no decision with "No → go to step N"
-- [~] Auto flowchart (HTML/CSS, printable; "No" branch shown as label not arrow; PNG/PDF export = browser print)
-- [~] Positions per department ("Who's who") + "People involved" per process; visual org chart NOT done
+- [x] Auto flowchart (HTML/CSS, printable; "No" branch shown as a label; PNG/PDF = browser print)
+- [x] Positions per department ("Who's who") + "People involved" per process + hierarchy chart
 - [x] New-hire view: `/handbook` (printable packet incl. glossary) + `/onboarding` per-department/per-position checklist with progress + manager team view + dashboard cards
 - [x] Link processes ↔ policies/forms/manuals (pick on process form; shown on process page + handbook; archived ones hidden)
 - [x] Version history for processes (every save = new version, old versions viewable)
@@ -101,7 +101,7 @@ process/
 - [x] Central logger: log_line() daily files app/audit/error
 - [x] audit_log writes on login/logout/reset, users, documents, processes, positions, change requests, exports
 - [x] Admin Audit page: filter by user/record type/action/record #/date, paging, field-level changes, CSV export (export itself audited, formula-safe)
-- [ ] File logs: `logs/app.log`, `error.log`, `access.log`; daily rotation; never log passwords/tokens
+- [x] File logs: daily `app-`, `error-`, `audit-` files, never passwords or tokens (web access log is the host's own)
 - [x] Timeline on each document (Activity); processes show version history
 - [x] Debug mode switch via `.env` APP_DEBUG (documented in DEPLOY.md)
 
@@ -109,13 +109,13 @@ process/
 - [x] Shared CSS/JS with design tokens; restyled to a shadcn/ui look (plain CSS, zinc theme) with a left sidebar layout (2026-11-11)
 - [x] GSAP mild: page fade-in, card stagger, panel slide — respect `prefers-reduced-motion`
 - [x] Keyboard accessible (skip link, focus outline, current page marked), print styles; responsive layout exists but is not re-checked on a phone
-- [ ] Empty/error/loading states
+- [x] Empty and error states (friendly 400/403/404 pages, "nothing here yet" messages)
 
 ## Phase 8 — Quality & security
-- [~] Upload validation done (ext whitelist, 20MB, random stored name, served only via PHP download); MIME sniffing not done
-- [ ] Input validation + output escaping (XSS), prepared statements (SQLi), CSRF
-- [ ] Security headers, HTTPS redirect, no CORS `*`
-- [ ] Tests: auth, permissions, versioning, audit
+- [x] Upload validation (extension allow-list, 20 MB, content-type check, random stored name, served only through the PHP download page)
+- [x] Input validation + output escaping (XSS), prepared statements (SQLi), CSRF
+- [x] Security headers, HTTPS redirect block ready in `.htaccess`, no CORS `*`
+- [x] Tests: auth, permissions, versioning, audit (10 smoke suites + restore drill)
 - [x] Accessibility pass (axe-core: 0 violations on 10 signed-in pages; not tested with a real screen reader or the public sign-in pages)
 
 ## Phase 9 — Deployment (cPanel)
@@ -126,8 +126,8 @@ process/
 
 ## Phase 10 — Handover
 - [x] Admin guide, editor guide, new-hire guide (docs/GUIDE.md)
-- [ ] Seed realistic sample data
-- [ ] Push to GitHub `iantolentino/ss-process-system` (code only — no db, no uploads, no `.env`)
+- [x] Seed realistic sample data (`seed_demo.php`, `seed_templates.php`, `seed_samples.php`)
+- [x] Push to GitHub `iantolentino/ss-process-system` (code only: no db, no uploads, no `.env`)
 
 ## Recommendations (extra, not requested)
 - Document owners + review reminders so policies don't silently go stale
