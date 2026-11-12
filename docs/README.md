@@ -1,5 +1,5 @@
 # docs/
-
+ 
 - `GO_LIVE.md` fill-in sheet and ordered steps for the first deployment. Start here.
 - `DEPLOY.md` full cPanel guide: database, code, `.env`, cron, HTTPS, restore, troubleshooting.
 - `GUIDE.md` user guide by role (new hires, editors, process owners, admins).
