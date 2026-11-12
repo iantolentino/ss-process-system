@@ -29,7 +29,7 @@ Legend: `[-]` deferred on purpose · `[ ]` todo · `[~]` in progress · `[x]` do
 ```
 process/
 ├─ frontend/        pages, css, js (GSAP mild), components, assets
-├─ backend/         routes/controllers, services, middleware, config
+├─ backend/         bootstrap, services, cron
 ├─ database/        schema, migrations, seeds, backups/
 ├─ authentication/  login, sessions, roles/permissions, reset password
 ├─ files/           uploads/ (policies, forms, manuals), exports/
@@ -78,7 +78,9 @@ process/
 - [x] Archive instead of delete (restore = set active)
 - [x] Compare versions (dates, size, change note; line diff for .txt/.csv; other types: download both)
 - [x] Review-due dates + dashboard "Reviews due" panel
-- [-] Acknowledgement tracking: deferred (owner said no UI for now; table exists)
+- [x] Read and confirm (acknowledgements): per-document switch, button for staff, "who has confirmed" for editors, list on Home (2026-11-12)
+- [x] Approval before publishing: non-admin uploads and active process saves wait for an admin (`/approvals`, migration 006)
+- [x] Document owner changeable by admins; PDF view in the browser; one search box (`/search`)
 - [x] Memos: from, audience, expiry (migration 002; expired badge)
 - [x] Forms: downloadable + category (same as other types)
 - [-] Optional protected/no-copy viewer: deferred (not needed for launch)
@@ -115,7 +117,8 @@ process/
 - [x] Upload validation (extension allow-list, 20 MB, content-type check, random stored name, served only through the PHP download page)
 - [x] Input validation + output escaping (XSS), prepared statements (SQLi), CSRF
 - [x] Security headers, HTTPS redirect block ready in `.htaccess`, no CORS `*`
-- [x] Tests: auth, permissions, versioning, audit (10 smoke suites + restore drill)
+- [x] Tests: auth, permissions, versioning, audit, approval (11 smoke suites + restore drill); GitHub checks PHP syntax on every push (`.github/workflows/php-lint.yml`)
+- [-] Process review dates and reminders: not needed. Owner confirmed (2026-11-12) the check is the admin approving what a department uploads, which the approval step already does
 - [x] Accessibility pass (axe-core: 0 violations on 10 signed-in pages; not tested with a real screen reader or the public sign-in pages)
 
 ## Phase 9 — Deployment (cPanel)

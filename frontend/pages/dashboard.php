@@ -5,6 +5,11 @@ $user = require_login();
 $due = db()->query("SELECT id, type, title, review_due, review_due < CURDATE() AS overdue FROM documents
                     WHERE status = 'active' AND review_due IS NOT NULL AND review_due <= CURDATE() + INTERVAL 30 DAY
                     ORDER BY review_due LIMIT 10")->fetchAll();
+// Documents this person is asked to read and has not confirmed yet (current version only).
+$toRead = db()->prepare("SELECT d.id, d.type, d.title FROM documents d LEFT JOIN acknowledgements k ON k.version_id = d.current_version_id AND k.user_id = ?
+                         WHERE d.status = 'active' AND d.ack_required = 1 AND k.user_id IS NULL ORDER BY d.title LIMIT 20");
+$toRead->execute([$user['id']]);
+$toRead = $toRead->fetchAll();
 $mySlug = '';
 if ($user['department_id']) {
     $s = db()->prepare('SELECT slug FROM departments WHERE id = ?');
@@ -23,6 +28,15 @@ $card = fn(string $href, string $ico, string $head, string $text) =>
   <h1 class="title" data-animate>Welcome, <?= h($user['first_name']) ?></h1>
   <p class="lead">Not sure where to start? Pick what you want to do below.</p>
 </div></div>
+
+<?php if (!empty($waitingCount)): ?><div class="alert ok"><?= $waitingCount ?> change<?= $waitingCount === 1 ? ' is' : 's are' ?> waiting for your approval. <a href="<?= base_url('approvals') ?>">Open approvals</a></div><?php endif ?>
+<?php if ($toRead): ?>
+<div class="panel" data-animate>
+  <h2>Please read and confirm</h2>
+  <p class="help">Open each document, read it, then press “I have read and understood this”.</p>
+  <ul class="plain"><?php foreach ($toRead as $d): ?><li><a href="<?= base_url('document?id=' . $d['id']) ?>"><?= h($d['title']) ?></a> <span class="muted">(<?= h($d['type']) ?>)</span></li><?php endforeach ?></ul>
+</div>
+<?php endif ?>
 
 <p class="section-title">What do you want to do?</p>
 <div class="cards">

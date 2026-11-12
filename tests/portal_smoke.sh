@@ -27,10 +27,15 @@ up(){ curl -s -c "$1" -b "$1" -o /dev/null -w '%{http_code} %{redirect_url}' -F 
 R=$(up "$T/own" -F type=policy -F "title=Smoke Policy $S" -F category=Test -F version_no=1.0 -F effective_date=2026-01-01 -F review_due=2020-01-01 -F "file=@$T/a.txt" "$B/policies")
 check "owner creates document" "${R%% *}" 302
 DOC=$(echo "$R" | grep -o 'id=[0-9]*' | cut -d= -f2)
+# A policy owner's upload waits for an admin: approve whatever is waiting for this document.
+approve(){ curl -s -c "$T/admin" -b "$T/admin" -o /dev/null -d "csrf=$(tok "$T/admin" approvals)&kind=document&decision=approve&vid=$(/c/xampp/mysql/bin/mysql.exe -uroot ss_process -N -e "SELECT id FROM document_versions WHERE document_id=$DOC AND approval='pending'")" "$B/approvals"; }
+check "owner's document waits for approval" "$(code "$T/emp" "document?id=$DOC")" 404
+approve
 check "employee cannot create" "$(up "$T/emp" -F type=policy -F title=x -F version_no=1 -F effective_date=2026-01-01 -F "file=@$T/a.txt" "$B/policies" | cut -d' ' -f1)" 403
 check "web page renamed .pdf rejected" "$(curl -s -c "$T/own" -b "$T/own" -F "csrf=$(tok "$T/own" policies)" -F type=policy -F title=Fake -F version_no=1 -F effective_date=2026-01-01 -F "file=@$T/fake.pdf" "$B/policies" | grep -c 'does not look like a real')" 1
 check "bad file type rejected" "$(curl -s -c "$T/own" -b "$T/own" -F "csrf=$(tok "$T/own" policies)" -F type=policy -F title=Bad -F version_no=1 -F effective_date=2026-01-01 -F "file=@$T/bad.exe" "$B/policies" | grep -c 'Allowed file types')" 1
 check "new version" "$(curl -s -c "$T/own" -b "$T/own" -o /dev/null -w '%{http_code}' -F "csrf=$(tok "$T/own" "document?id=$DOC")" -F id=$DOC -F action=version -F version_no=2.0 -F effective_date=2026-06-01 -F "changelog=Updated scope" -F "file=@$T/b.txt" "$B/document")" 302
+approve
 check "duplicate version rejected" "$(curl -s -c "$T/own" -b "$T/own" -F "csrf=$(tok "$T/own" "document?id=$DOC")" -F id=$DOC -F action=version -F version_no=2.0 -F effective_date=2026-06-01 -F changelog=x -F "file=@$T/b.txt" "$B/document" | grep -c 'already exists')" 1
 PAGE=$(curl -s -b "$T/emp" "$B/document?id=$DOC")
 check "employee sees both versions" "$(echo "$PAGE" | grep -c 'Updated scope\|Initial version')" 2
@@ -44,5 +49,5 @@ check "uploads folder not web-readable" "$(curl -s -o /dev/null -w '%{http_code}
 check "employee cannot edit" "$(curl -s -c "$T/emp" -b "$T/emp" -o /dev/null -w '%{http_code}' -d "csrf=$(tok "$T/emp" "document?id=$DOC")&id=$DOC&title=Hacked&status=active" "$B/document")" 403
 curl -s -c "$T/own" -b "$T/own" -o /dev/null -d "csrf=$(tok "$T/own" "document?id=$DOC")&id=$DOC&title=Smoke+Policy+$S&status=archived" "$B/document"
 check "archived hidden from employee" "$(code "$T/emp" "document?id=$DOC")" 404
-check "audit trail recorded (incl. download)" "$(/c/xampp/mysql/bin/mysql.exe -uroot ss_process -N -e "SELECT COUNT(*) FROM audit_log WHERE entity='document' AND entity_id=$DOC")" 5
+check "audit trail recorded (incl. download, 2 approvals)" "$(/c/xampp/mysql/bin/mysql.exe -uroot ss_process -N -e "SELECT COUNT(*) FROM audit_log WHERE entity='document' AND entity_id=$DOC")" 7
 rm -rf "$T"; exit $fail

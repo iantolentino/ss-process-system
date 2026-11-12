@@ -20,6 +20,7 @@ h1, h2, h3 { letter-spacing: -.02em; }
 .sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; background: #fafafa; border-right: 1px solid var(--border); padding: 16px 12px; }
 .side-brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 16px; font-weight: 600; font-size: 15px; text-decoration: none; }
 .side-logo { width: 28px; height: 28px; border-radius: 6px; background: var(--primary); color: var(--primary-foreground); display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+.side-search { margin: 0 0 14px; }
 .side-group { margin-bottom: 14px; }
 .side-label { padding: 0 8px 6px; font-size: 12px; font-weight: 500; color: var(--muted-foreground); }
 .side-link { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 6px; color: #3f3f46; text-decoration: none; font-size: 14px; }

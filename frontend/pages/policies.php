@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$canEdit) { error_page(403, 'You do not have access to this action.'); }
     try {
         $id = create_document($user, $_POST, $_FILES['file'] ?? []);
-        flash('Document created.');
+        flash($user['role'] === 'admin' ? 'Document created.' : 'Sent to an admin for approval. Staff will see it once it is approved.');
         redirect("document?id=$id");
     } catch (UserError $e) {
         $error = $e->getMessage();
@@ -82,7 +82,9 @@ $qs = fn(string $t) => base_url('policies?type=' . $t);
         <div class="form-group"><label class="form-label">SharePoint link</label><input class="form-input" name="sharepoint_url" value="<?= h($_POST['sharepoint_url'] ?? '') ?>"></div>
       </div>
       <div class="form-group"><label class="form-label">Note about this version</label><input class="form-input" name="changelog" value="<?= h($_POST['changelog'] ?? '') ?>" placeholder="Initial version"></div>
+      <div class="form-group"><label><input type="checkbox" name="ack_required" value="1" <?= !empty($_POST['ack_required']) ? 'checked' : '' ?>> Ask everyone to confirm they have read this document</label></div>
     </details>
+    <?php if ($user['role'] !== 'admin'): ?><p class="help">An admin checks every new document before staff can see it.</p><?php endif ?>
     <button class="btn inline" type="submit">Upload document</button>
   </form>
   <script>

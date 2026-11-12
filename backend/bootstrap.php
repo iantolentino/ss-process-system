@@ -52,6 +52,11 @@ function notify(string $to, string $subject, string $body): void {
     if (!$ok) log_line('error', 'WARN', "mail to $to failed: $subject");
 }
 
+// Same message to every active admin (approvals waiting, etc.).
+function notify_admins(string $subject, string $body): void {
+    foreach (db()->query("SELECT email FROM users WHERE role = 'admin' AND active = 1")->fetchAll(PDO::FETCH_COLUMN) as $email) notify($email, $subject, $body);
+}
+
 // Minimal SMTP client: SMTP_SECURE=tls (STARTTLS, port 587, default) | ssl (port 465) | none; AUTH LOGIN when SMTP_USER is set.
 function smtp_send(string $to, string $subject, string $body): bool {
     $host = env('SMTP_HOST'); $port = (int) env('SMTP_PORT', '587'); $secure = env('SMTP_SECURE', 'tls');

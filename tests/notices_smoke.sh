@@ -19,7 +19,11 @@ login "$T/po" "po$S@example.test" $PW; login "$T/em" "em$S@example.test" $PW
 # process v1, then v2 with one step added, one removed, one edited
 post "$T/po" "process-edit?dept=client-success" -d dept=client-success -d "name=Notice $S" -d "purpose=p" -d status=active -d "steps[0][title]=Alpha $S" -d "steps[0][detail]=one" -d "steps[1][title]=Beta $S" -d "steps[1][detail]=two" >/dev/null
 PID=$($M "SELECT id FROM processes WHERE name='Notice $S'")
+# Owners' active saves wait for an admin: approve whatever is waiting for this process.
+approve(){ post "$T/admin" approvals -d kind=process -d "vid=$($M "SELECT id FROM process_versions WHERE process_id=$PID AND approval='pending'")" -d decision=approve >/dev/null; }
+approve
 post "$T/po" "process-edit?id=$PID" -d "id=$PID" -d "name=Notice $S" -d "purpose=p" -d status=active -d "changelog=tweak" -d "steps[0][title]=Alpha $S" -d "steps[0][detail]=changed" -d "steps[1][title]=Gamma $S" -d "steps[1][detail]=new" >/dev/null
+approve
 V2=$(curl -s -b "$T/em" "$B/process?id=$PID&v=2&changes=1")
 check "changes shows added step" "$(echo "$V2" | grep -c "+ Added step: Gamma $S")" 1
 check "changes shows removed step" "$(echo "$V2" | grep -c "\- Removed step: Beta $S")" 1

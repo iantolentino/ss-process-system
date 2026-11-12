@@ -11,6 +11,11 @@ function can_edit_process(array $user, int $deptId): bool {
     return $user['role'] === 'admin' || ($user['role'] === 'process_owner' && (int) $user['department_id'] === $deptId);
 }
 
+// Only an admin publishes directly. A process owner's save that staff would see waits for an admin.
+function needs_approval(array $user, string $status): bool {
+    return $user['role'] !== 'admin' && $status === 'active';
+}
+
 function text(array $a, string $k, int $max = 2000): string {
     return mb_substr(trim((string) ($a[$k] ?? '')), 0, $max);
 }
@@ -69,6 +74,11 @@ function save_process(array $user, ?int $id, int $deptId, array $in): int {
     if (!isset(CADENCE[$cadence])) throw new UserError('Pick how often it happens.');
     $kind = ($in['kind'] ?? 'process') === 'template' ? 'template' : 'process';
     $snap = build_snapshot($in);
+    // The name, purpose etc. travel with the version, so a waiting version can be applied later exactly as it was sent.
+    $meta = ['name' => $name, 'purpose' => $purpose, 'owner_position' => text($in, 'owner_position', 160), 'status' => $status, 'cadence' => $cadence, 'kind' => $kind];
+    $snap['meta'] = $meta;
+    $pending = needs_approval($user, $status);
+    $isNew = $id === null;
 
     $pdo = db();
     $before = null;
@@ -79,6 +89,9 @@ function save_process(array $user, ?int $id, int $deptId, array $in): int {
         if (!($before = $s->fetch())) throw new UserError('Process not found.');
         $before['snapshot'] = json_decode($before['snapshot'] ?? 'null', true);
         if ($changelog === '') throw new UserError('Describe what changed in this version.');
+        $w = $pdo->prepare("SELECT id FROM process_versions WHERE process_id = ? AND approval = 'pending'");
+        $w->execute([$id]);
+        if ($w->fetch()) throw new UserError('A change to this process is already waiting for approval. Ask an admin to approve or reject it first.');
     } elseif ($changelog === '') {
         $changelog = 'Initial version';
     }
@@ -87,25 +100,55 @@ function save_process(array $user, ?int $id, int $deptId, array $in): int {
     try {
         if ($id === null) {
             $pdo->prepare('INSERT INTO processes (department_id, name, purpose, owner_position, status, cadence, kind) VALUES (?,?,?,?,?,?,?)')
-                ->execute([$deptId, $name, $purpose, text($in, 'owner_position', 160), $status, $cadence, $kind]);
+                ->execute([$deptId, $name, $purpose, $meta['owner_position'], $pending ? 'draft' : $status, $cadence, $kind]);   // waiting for approval = still a draft
             $id = (int) $pdo->lastInsertId();
             $no = 1;
         } else {
-            $pdo->prepare('UPDATE processes SET name=?, purpose=?, owner_position=?, status=?, cadence=?, kind=? WHERE id=?')
-                ->execute([$name, $purpose, text($in, 'owner_position', 160), $status, $cadence, $kind, $id]);
+            if (!$pending) apply_process_meta($id, $meta);   // a waiting change leaves the live process exactly as staff see it now
             $no = (int) $pdo->query("SELECT COALESCE(MAX(version_no),0)+1 FROM process_versions WHERE process_id = $id")->fetchColumn();
         }
-        $pdo->prepare('INSERT INTO process_versions (process_id, version_no, snapshot, changelog, created_by) VALUES (?,?,?,?,?)')
-            ->execute([$id, $no, json_encode($snap, JSON_UNESCAPED_UNICODE), $changelog, $user['id']]);
-        $pdo->prepare('UPDATE processes SET current_version_id = ? WHERE id = ?')->execute([$pdo->lastInsertId(), $id]);
+        $pdo->prepare('INSERT INTO process_versions (process_id, version_no, snapshot, changelog, created_by, approval) VALUES (?,?,?,?,?,?)')
+            ->execute([$id, $no, json_encode($snap, JSON_UNESCAPED_UNICODE), $changelog, $user['id'], $pending ? 'pending' : 'approved']);
+        if (!$pending || $isNew) $pdo->prepare('UPDATE processes SET current_version_id = ? WHERE id = ?')->execute([$pdo->lastInsertId(), $id]);
         $pdo->commit();
     } catch (Throwable $e) {
         $pdo->rollBack();
         throw $e;
     }
     audit((int) $user['id'], $before ? 'new_version' : 'create', 'process', $id, $before,
-        ['name' => $name, 'status' => $status, 'cadence' => $cadence, 'kind' => $kind, 'version_no' => $no, 'changelog' => $changelog, 'snapshot' => $snap]);
+        ['name' => $name, 'status' => $status, 'cadence' => $cadence, 'kind' => $kind, 'version_no' => $no, 'changelog' => $changelog, 'approval' => $pending ? 'pending' : 'approved', 'snapshot' => $snap]);
+    if ($pending) {
+        notify_admins("Waiting for your approval: $name", "{$user['first_name']} {$user['last_name']} saved version $no of the process \"$name\".\nWhat changed: $changelog\n\n" . app_url('approvals'));
+    }
     return $id;
+}
+
+function apply_process_meta(int $id, array $m): void {
+    db()->prepare('UPDATE processes SET name=?, purpose=?, owner_position=?, status=?, cadence=?, kind=? WHERE id=?')
+        ->execute([$m['name'], $m['purpose'], $m['owner_position'], $m['status'], $m['cadence'], $m['kind'], $id]);
+}
+
+// Admin decision on a waiting version. Approving applies it: it becomes the version staff see.
+function decide_process_version(array $user, int $vid, bool $approve, string $note): void {
+    $pdo = db();
+    $s = $pdo->prepare("SELECT v.process_id, v.version_no, v.snapshot, p.name, u.email FROM process_versions v JOIN processes p ON p.id = v.process_id JOIN users u ON u.id = v.created_by
+                        WHERE v.id = ? AND v.approval = 'pending'");
+    $s->execute([$vid]);
+    if (!($v = $s->fetch())) throw new UserError('That item is no longer waiting for approval.');
+    $note = mb_substr(trim($note), 0, 500);
+    if (!$approve && $note === '') throw new UserError('Say why it is rejected, so the person can fix it.');
+
+    $pdo->beginTransaction();
+    $pdo->prepare('UPDATE process_versions SET approval = ?, decided_by = ?, decided_at = NOW(), decision_note = ? WHERE id = ?')
+        ->execute([$approve ? 'approved' : 'rejected', $user['id'], $note, $vid]);
+    if ($approve) {
+        apply_process_meta((int) $v['process_id'], json_decode($v['snapshot'], true)['meta']);
+        $pdo->prepare('UPDATE processes SET current_version_id = ? WHERE id = ?')->execute([$vid, $v['process_id']]);
+    }
+    $pdo->commit();
+    $word = $approve ? 'approved' : 'rejected';
+    audit((int) $user['id'], $word, 'process', (int) $v['process_id'], null, ['version_no' => (int) $v['version_no'], 'note' => $note]);
+    notify($v['email'], "Your change was $word: {$v['name']}", "Version {$v['version_no']} of \"{$v['name']}\" was $word." . ($note !== '' ? "\nNote: $note" : '') . "\n\n" . app_url('process?id=' . $v['process_id']));
 }
 
 // Active documents for a list of ids (silently drops archived/deleted ones).
@@ -125,6 +168,7 @@ function set_process_status(array $user, int $id, string $status): void {
     $s->execute([$id]);
     $old = $s->fetchColumn();
     if ($old === false) throw new UserError('Process not found.');
+    if (needs_approval($user, $status)) $status = 'draft';   // a process owner restores to a draft; saving it as active sends it for approval
     db()->prepare('UPDATE processes SET status = ? WHERE id = ?')->execute([$status, $id]);
     audit((int) $user['id'], $status === 'archived' ? 'archive' : 'restore', 'process', $id, ['status' => $old], ['status' => $status]);
 }

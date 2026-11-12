@@ -17,6 +17,9 @@ Reviewed: routing, access rules, every POST handler's role check, SQL (all user 
 ## Checked and fine
 Draft/archived content hidden from people who can't edit; process owners limited to their department; employees blocked from Users and Audit; CSRF on every POST; logout is POST-only; uploads use an allow-list, random stored names, live outside public access and download as attachments with `nosniff`; CSV export neutralises formulas; SharePoint links must be http(s); internals/dotfiles/docs/tests/logs are blocked by `.htaccess`; passwords are bcrypt/argon via `password_hash`; login timing doesn't reveal which emails exist.
 
+## Added 2026-11-12
+Approval before publishing: only an admin can make new content visible to staff (a policy owner's upload and a process owner's active save wait as pending; pending and rejected versions are hidden from staff on the page, in downloads and in search). The approvals page is admin-only. PDF view (`download?inline=1`) is PDF-only, sends `application/pdf` with `nosniff`, and drops the page CSP for that one response because the browser's PDF viewer needs it. Read confirmations are one row per person per version and are audited. Checked by `tests/approval_smoke.sh` (37 checks).
+
 ## Known limits (accepted, documented)
 - Lockout is per email, so someone can deliberately lock a colleague out for 15 minutes (the cost of stopping password guessing).
 - CSP still allows inline scripts (a few small ones); moving them to files lets you drop `'unsafe-inline'`.

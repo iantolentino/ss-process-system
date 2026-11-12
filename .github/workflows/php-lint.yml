@@ -1,0 +1,13 @@
+# Fails the push when any PHP file has a syntax error. Uses the PHP that ships with the GitHub runner (no extra actions).
+# The smoke suites in tests/ need a local server and database, so they are not run here.
+name: PHP syntax check
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: php -v
+      - run: find . -name '*.php' -print0 | xargs -0 -n1 php -l

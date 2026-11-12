@@ -44,6 +44,8 @@ $r = $user['role'];
     <li><strong>Compare:</strong> in the version list, <em>Compare with previous</em> shows what changed (line by line for .txt and .csv files).</li>
     <li><strong>Remove a document:</strong> set its status to archived. It is hidden from staff but never deleted.</li>
     <li><strong>Review date:</strong> set when it should next be checked. The Home page and a weekly email show what is due.</li>
+    <li><strong>Approval:</strong> what a policy owner uploads waits until an admin approves it. Staff keep seeing the current version until then. If it is rejected, you get the reason by email.</li>
+    <li><strong>Read and confirm:</strong> tick <em>Ask everyone to confirm they have read this document</em>. The document page then shows who has confirmed and who has not.</li>
   </ul>
 </div>
 <?php endif ?>
@@ -58,6 +60,7 @@ $r = $user['role'];
     <li><strong>Remove:</strong> hides a process but keeps it and its history; use <em>Restore</em> to bring it back.</li>
     <li><strong>Decisions:</strong> tick "yes/no decision" on a step and say which step to go to if the answer is No.</li>
     <li><strong>Every save is a new version.</strong> Old versions stay and you can see what changed.</li>
+    <li><strong>Approval:</strong> when a process owner saves a process as <em>active</em>, an admin approves it before staff see the change. Drafts need no approval.</li>
     <li><strong>Who is who:</strong> add your positions and who reports to whom on the department page. New hires rely on it.</li>
     <li><strong>Still correct?</strong> Press <em>Confirm still correct</em> on a process after you check it.</li>
     <li><strong>Requests:</strong> staff suggestions arrive on the process's Requests tab. Approve, reject, or mark them done.</li>

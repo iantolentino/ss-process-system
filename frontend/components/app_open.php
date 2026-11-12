@@ -24,12 +24,18 @@ $nav = [['Start', array_filter([
         $user['department_id'] ? ['handbook', 'Start here (new hires)', 'book'] : null,
         $user['department_id'] ? ['onboarding', 'My checklist', 'check'] : null])],
     ['Library', [['overview', 'Company overview', 'grid'], ['process-library', 'Processes', 'flow'], ['policies', 'Policies & forms', 'file'], ['glossary', 'Glossary', 'tag'], ['help', 'How to use this site', 'help']]]];
-if ($user['role'] === 'admin') $nav[] = ['Admin', [['users', 'People & roles', 'users'], ['audit', 'Activity history', 'clock']]];
+if ($user['role'] === 'admin') {
+    $waitingCount = (int) db()->query("SELECT (SELECT COUNT(*) FROM document_versions WHERE approval = 'pending') + (SELECT COUNT(*) FROM process_versions WHERE approval = 'pending')")->fetchColumn();
+    $nav[] = ['Admin', [['approvals', 'Approvals' . ($waitingCount ? " ($waitingCount)" : ''), 'check'], ['users', 'People & roles', 'users'], ['audit', 'Activity history', 'clock']]];
+}
 ?>
 <a class="skip" href="#main">Skip to content</a>
 <div class="shell">
 <aside class="sidebar" id="sidebar" aria-label="Main">
   <a class="side-brand" href="<?= base_url('dashboard') ?>"><span class="side-logo" aria-hidden="true">S</span>Strata Staff</a>
+  <form class="side-search" role="search" method="get" action="<?= base_url('search') ?>">
+    <input class="form-input" type="search" name="q" placeholder="Search everything" aria-label="Search policies, processes and glossary" value="<?= ($page ?? '') === 'search' ? h($_GET['q'] ?? '') : '' ?>">
+  </form>
   <nav>
   <?php foreach ($nav as [$group, $links]): ?>
     <div class="side-group"><div class="side-label"><?= h($group) ?></div>

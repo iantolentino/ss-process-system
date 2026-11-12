@@ -25,7 +25,7 @@ $error = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $id = save_process($user, $id, $deptId, $_POST);
-        flash('Process saved.');
+        flash(needs_approval($user, $_POST['status'] ?? 'active') ? 'Sent to an admin for approval. Staff will see it once it is approved.' : 'Process saved.');
         redirect("process?id=$id");
     } catch (UserError $e) {
         $error = $e->getMessage();
@@ -136,7 +136,7 @@ require __DIR__ . '/../components/app_open.php';
         <p class="help">Processes are grouped by this on the department page.</p></div>
       <div class="form-group"><label class="form-label">Who can see it?</label>
         <select class="form-input" name="status"><?php foreach (PROC_STATUS as $st): ?><option <?= ($f['status'] ?? '') === $st ? 'selected' : '' ?>><?= h($st) ?></option><?php endforeach ?></select>
-        <p class="help">draft = only editors · active = everyone · archived = hidden</p></div>
+        <p class="help">draft = only editors · active = everyone<?= $user['role'] === 'admin' ? '' : ', after an admin approves it' ?> · archived = hidden</p></div>
       <div class="form-group"><label class="form-label">Save as</label>
         <select class="form-input" name="kind"><option value="process" <?= !$isTpl ? 'selected' : '' ?>>A live process (staff see it)</option><option value="template" <?= $isTpl ? 'selected' : '' ?>>A reusable template (a starting point for new processes)</option></select></div>
     </div>

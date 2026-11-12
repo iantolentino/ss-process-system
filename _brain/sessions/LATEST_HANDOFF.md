@@ -9,6 +9,10 @@ Strata Process System (PHP 8 + MySQL, cPanel): merged Process Library + Policy P
 - 10 smoke suites + restore drill pass (security 29/29). Everything is pushed except the local-only items below.
 - Release plan written (Claude Doc + deliverables/Merge_Plan_and_Release_Schedule.docx + Teams_message.html; deliverables/ is git-ignored). Dates: MVP demo Fri 2026-12-11, go-live Tue 2027-01-12, final announcement Fri 2027-01-22; owner away 2026-12-19..2027-01-03.
 
+- 2026-11-12 structure review vs paid/open-source tools: structure is fine; ranked gap list is in the newest PROGRESS.md log entry (approval step, acknowledgements, process review dates, reassignable document owner, PDF view). Owner approved all but process review dates.
+- 2026-11-12 built (migration 006, NOT committed): approval before publishing (`/approvals`, admins only publish), read-and-confirm, admin can change document owner, PDF view in browser, one search (`/search`), `.github/workflows/php-lint.yml`, empty backend folders removed. New `tests/approval_smoke.sh` (37). All 11 suites + restore drill pass. Details in the newest PROGRESS.md entry.
+- Process review dates/reminders: owner confirmed NOT needed; the admin approving department uploads is the check.
+
 ## Current State
 - Read PROGRESS.md first, then TODO.md.
 - Local env: XAMPP. `.env` DB_NAME now = `ss_process_demo` (clean demo data: 46 legacy processes, templates, samples, demo accounts; admin@example.test / DemoPass123; demo.*@example.test / DemoPass123). Original test DB `ss_process` still has all smoke-test rows; original env saved as `.env.before_demo`. To run the smoke tests set DB_NAME=ss_process (tests also hard-code `ss_process` for mysql calls and use admin NewPass456).
@@ -28,8 +32,7 @@ When owner is ready: show MVP to Sir Bones (use demo DB), then test with real st
 
 ## Git Baseline
 
-- Base commit: 2ccb5e01559a5e62809bfc7c2a5e9cac3334794b
+- Base commit: 8033d8ff2946b238c9aec4357f9ef3b7b5877d73
 - Branch: main
 - Working tree at handoff: has uncommitted changes
 - Verification: [tests/checks run, or not yet run]
-

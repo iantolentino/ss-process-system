@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $act = $_POST['action'] ?? '';
         if ($act === 'request') { add_change_request($user, $id, $_POST); flash('Change request sent to the process owner.'); }
         elseif ($canEdit && $act === 'review') { mark_reviewed($user, $id); flash('Marked as reviewed today.'); }
-        elseif ($canEdit && in_array($act, ['archive', 'restore'], true)) { set_process_status($user, $id, $act === 'archive' ? 'archived' : 'active'); flash($act === 'archive' ? 'Removed from the library. It is kept and can be restored.' : 'Restored.'); }
+        elseif ($canEdit && in_array($act, ['archive', 'restore'], true)) { set_process_status($user, $id, $act === 'archive' ? 'archived' : 'active'); flash($act === 'archive' ? 'Removed from the library. It is kept and can be restored.' : (needs_approval($user, 'active') ? 'Restored as a draft. Edit it and save it as active to send it for approval.' : 'Restored.')); }
         elseif ($canEdit && $act === 'resolve') { resolve_change_request($user, (int) $_POST['request_id'], $_POST['status'] ?? ''); flash('Request updated.'); }
         else { error_page(403, 'You do not have access to this action.'); }
         redirect("process?id=$id");
@@ -24,10 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$vs = db()->prepare('SELECT v.id, v.version_no, v.changelog, v.created_at, CONCAT(u.first_name, " ", u.last_name) AS who
-                     FROM process_versions v JOIN users u ON u.id = v.created_by WHERE v.process_id = ? ORDER BY v.version_no DESC');
-$vs->execute([$id]);
+// Versions that are waiting for approval or were rejected are only shown to people who can edit this process.
+$vs = db()->prepare('SELECT v.id, v.version_no, v.changelog, v.created_at, v.approval, v.decision_note, CONCAT(u.first_name, " ", u.last_name) AS who
+                     FROM process_versions v JOIN users u ON u.id = v.created_by WHERE v.process_id = ? AND (? OR v.approval = "approved") ORDER BY v.version_no DESC');
+$vs->execute([$id, (int) $canEdit]);
 $versions = $vs->fetchAll();
+$waiting = current(array_filter($versions, fn($v) => $v['approval'] === 'pending')) ?: null;
 
 $want = (int) ($_GET['v'] ?? 0);
 $ver = null;
@@ -42,7 +44,8 @@ $steps = $snap['steps'];
 // "What changed" = this version against the one before it.
 $changes = null;
 if (isset($_GET['changes']) && $ver['version_no'] > 1) {
-    $q->execute([array_column($versions, 'id', 'version_no')[$ver['version_no'] - 1] ?? 0]);
+    // A waiting version is compared with what staff see now, so the approver sees exactly what would change.
+    $q->execute([$ver['approval'] === 'pending' ? $proc['current_version_id'] : (array_column($versions, 'id', 'version_no')[$ver['version_no'] - 1] ?? 0)]);
     $changes = diff_snapshots(json_decode($q->fetchColumn(), true) ?: ['steps' => []], $snap);
 }
 
@@ -91,8 +94,11 @@ $openReqs = count(array_filter($requests, fn($r) => $r['status'] === 'open'));
   <button class="btn ghost inline" type="button" onclick="print()">Print</button>
 </div></div>
 
-<?php if ($isOld): ?><div class="alert error">You are viewing version <?= (int) $ver['version_no'] ?> from <?= h($ver['created_at']) ?>. <a href="<?= base_url('process?id=' . $id) ?>">Go to current version</a></div><?php endif ?>
+<?php if ($isOld && $ver['approval'] !== 'pending'): ?><div class="alert error">You are viewing version <?= (int) $ver['version_no'] ?> from <?= h($ver['created_at']) ?>. <a href="<?= base_url('process?id=' . $id) ?>">Go to current version</a></div><?php endif ?>
 <?php if ($error): ?><div class="alert error"><?= h($error) ?></div><?php endif ?>
+<?php if ($waiting && $waiting['id'] != $ver['id']): ?><div class="alert ok noprint">Version <?= (int) $waiting['version_no'] ?> is waiting for an admin's approval. Staff keep seeing this version until then.
+  <a href="<?= base_url('process?id=' . $id . '&v=' . $waiting['version_no'] . '&changes=1') ?>">See what is waiting</a></div>
+<?php elseif ($waiting): ?><div class="alert ok noprint">This version is waiting for an admin's approval. Staff do not see it yet.<?php if ($user['role'] === 'admin'): ?> <a href="<?= base_url('approvals') ?>">Go to approvals</a><?php endif ?></div><?php endif ?>
 
 <?php if ($changes !== null): ?>
 <div class="panel noprint" data-animate><h2>What changed in version <?= (int) $ver['version_no'] ?></h2>
@@ -163,7 +169,8 @@ $openReqs = count(array_filter($requests, fn($r) => $r['status'] === 'open'));
   <div class="table-wrap"><table class="tbl">
     <?php foreach ($versions as $v): ?>
     <tr><td><a href="<?= base_url('process?id=' . $id . '&v=' . $v['version_no']) ?>">Version <?= (int) $v['version_no'] ?></a></td>
-      <td><?= h($v['created_at']) ?></td><td><?= h($v['who']) ?></td><td><?= h($v['changelog']) ?></td>
+      <td><?= h($v['created_at']) ?></td><td><?= h($v['who']) ?></td><td><?= h($v['changelog']) ?>
+        <?php if ($v['approval'] !== 'approved'): ?> <span class="badge <?= $v['approval'] === 'pending' ? 'warn' : 'off' ?>"><?= $v['approval'] === 'pending' ? 'waiting for approval' : 'rejected' ?></span><?= $v['decision_note'] !== '' ? ' <span class="muted">' . h($v['decision_note']) . '</span>' : '' ?><?php endif ?></td>
       <td><?= $v['version_no'] > 1 ? '<a href="' . base_url('process?id=' . $id . '&v=' . $v['version_no'] . '&changes=1') . '">What changed</a>' : '' ?></td></tr>
     <?php endforeach ?>
   </table></div>
